@@ -18,13 +18,15 @@ public class BoardView extends StackPane {
 
         // Fond plateau → tu remplaceras l’image
         try {
-            ImageView bg = new ImageView(new Image(new FileInputStream("resources/images/board.png")));
+            Image bgImg = new Image(getClass().getResourceAsStream("/images/board.png"));
+            ImageView bg = new ImageView(bgImg);
             bg.setFitWidth(800);
             bg.setFitHeight(600);
             getChildren().add(bg);
         } catch (Exception e) {
             System.out.println("Missing board.png");
         }
+
 
         grid = new GridPane();
         grid.setPadding(new Insets(20));
