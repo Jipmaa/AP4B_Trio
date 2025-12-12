@@ -1,26 +1,29 @@
 package controller;
 
-import javafx.stage.Stage;
 import model.Game;
-import view.GameView;
 
 public class GameController {
 
     private Game game;
-    private GameView view;
-    private Stage stage;
+    private NavigationController navController;
 
-    public GameController(Game game, Stage stage) {
+    public GameController(Game game, NavigationController navController) {
         this.game = game;
-        this.stage = stage;
-
-        this.view = new GameView(game, this);
-
-        stage.getScene().setRoot(view);
+        this.navController = navController;
     }
 
     public void endTurn() {
         game.nextPlayer();
-        view.refresh(game);
+        // The view will be responsible for observing the model and refreshing itself.
+        // Or the view will call methods on the controller to get state.
+        // For now, we just update the model.
+    }
+
+    public void returnToMenu() {
+        navController.showMainMenu();
+    }
+    
+    public Game getGame() {
+        return game;
     }
 }

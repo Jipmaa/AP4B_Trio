@@ -26,6 +26,9 @@ public class CardView extends StackPane {
 
         updateImage();
 
+        setStyle("-fx-border-color: black; -fx-border-width: 2; -fx-border-radius: 6;");
+        imageView.setStyle("-fx-border-radius: 6;");
+
         getChildren().add(imageView);
     }
 

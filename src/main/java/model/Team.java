@@ -19,8 +19,17 @@ public class Team {
     }
 
     public void addPlayer(Player p) {
-        members.add(p);
-        p.setTeam(this);
+        if (!members.contains(p)) {
+            members.add(p);
+            p.setTeam(this);
+        }
+    }
+
+    public void removePlayer(Player p) {
+        members.remove(p);
+        if (p.getTeam() == this) {
+            p.setTeam(null);
+        }
     }
 
     public List<Player> getPlayers() {
@@ -33,5 +42,10 @@ public class Team {
 
     public void addPoint(int pts) {
         this.score += pts;
+    }
+
+    @Override
+    public String toString() {
+        return "Team{name='" + name + "', score=" + score + ", members=" + members.size() + "}";
     }
 }
