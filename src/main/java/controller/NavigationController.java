@@ -1,11 +1,14 @@
 package controller;
 
 import javafx.stage.Stage;
-import model.Deck;
-import model.Game;
-import model.Board;
-import model.Player;
+import model.*;
 import model.Game.Mode;
+import view.GameSetupView;
+import view.GameView;
+import view.MenuView;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class NavigationController {
 
@@ -15,15 +18,47 @@ public class NavigationController {
         this.stage = stage;
     }
 
-    public void startNormalGame() {
+    public void showMainMenu() {
+        MenuView menuView = new MenuView(this, stage);
+        menuView.show();
+    }
+
+    public void showGameSetup() {
+        GameSetupView gameSetupView = new GameSetupView(this);
+        stage.getScene().setRoot(gameSetupView);
+    }
+
+    public void startGame(Mode mode, int playerCount, String[] playerNames, String[][] teamNames) {
         Deck deck = new Deck("resources/cards.txt");
         Board board = new Board(deck.getCards());
-        Game game = new Game(deck, Mode.NORMAL, board);
 
-        game.addPlayer(new Player("Fabien"));
-        game.addPlayer(new Player("Romulo"));
-        game.addPlayer(new Player("Baptiste"));
+        Game game = new Game(deck, mode, board);
 
-        new GameController(game, stage);
+        List<Player> players = new ArrayList<>();
+        for (int i = 0; i < playerCount; i++) {
+            Player p = new Player(playerNames[i]);
+            players.add(p);
+            game.addPlayer(p);
+        }
+
+        if (mode == Mode.TEAM) {
+            Team team1 = new Team(teamNames[0][0]);
+            Team team2 = new Team(teamNames[1][0]);
+
+            // Simple repartition
+            for (int i = 0; i < players.size(); i++) {
+                if (i % 2 == 0) {
+                    team1.addPlayer(players.get(i));
+                } else {
+                    team2.addPlayer(players.get(i));
+                }
+            }
+            game.addTeam(team1);
+            game.addTeam(team2);
+        }
+
+        GameController gameController = new GameController(game, this);
+        GameView gameView = new GameView(game, gameController);
+        stage.getScene().setRoot(gameView);
     }
 }

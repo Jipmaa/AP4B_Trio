@@ -2,9 +2,6 @@ package model;
 
 import javafx.scene.image.Image;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-
 public class Card {
 
     private final int id;
@@ -16,21 +13,22 @@ public class Card {
     public Card(int id, int value, String imagePath) {
         this.id = id;
         this.value = value;
-        this.imagePath = imagePath; // ex: "card3.png"
+        this.imagePath = imagePath;
         loadImage();
     }
-
 
     private void loadImage() {
         try {
             image = new Image(getClass().getResourceAsStream("/" + imagePath));
         } catch (Exception e) {
             System.out.println("Missing image: " + imagePath + ", using back.png");
-            image = new Image(getClass().getResourceAsStream("/images/back.png"));
+            try {
+                image = new Image(getClass().getResourceAsStream("/images/back.png"));
+            } catch (Exception ex) {
+                System.out.println("back.png also missing!");
+            }
         }
     }
-
-
 
     public int getId() {
         return id;
@@ -44,11 +42,20 @@ public class Card {
         return image;
     }
 
+    public String getImagePath() {
+        return imagePath;
+    }
+
     public boolean isFlipped() {
         return flipped;
     }
 
     public void setFlipped(boolean flipped) {
         this.flipped = flipped;
+    }
+
+    @Override
+    public String toString() {
+        return "Card{id=" + id + ", value=" + value + ", flipped=" + flipped + "}";
     }
 }
