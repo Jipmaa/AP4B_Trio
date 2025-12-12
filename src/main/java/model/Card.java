@@ -16,22 +16,21 @@ public class Card {
     public Card(int id, int value, String imagePath) {
         this.id = id;
         this.value = value;
-        this.imagePath = imagePath;
+        this.imagePath = imagePath; // ex: "card3.png"
         loadImage();
     }
 
+
     private void loadImage() {
         try {
-            image = new Image(new FileInputStream("src/main/resources/" + imagePath));
-        } catch (FileNotFoundException e) {
+            image = new Image(getClass().getResourceAsStream("/" + imagePath));
+        } catch (Exception e) {
             System.out.println("Missing image: " + imagePath + ", using back.png");
-            try {
-                image = new Image(new FileInputStream("src/main/resources/images/back.png"));
-            } catch (FileNotFoundException ex) {
-                throw new RuntimeException("Missing back.png in resources/images/");
-            }
+            image = new Image(getClass().getResourceAsStream("/images/back.png"));
         }
     }
+
+
 
     public int getId() {
         return id;

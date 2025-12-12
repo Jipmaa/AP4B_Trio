@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 public class Deck {
 
@@ -25,20 +26,28 @@ public class Deck {
 
     private void loadFromFile(String path) {
         try (BufferedReader br = new BufferedReader(
-                new FileReader("src/main/resources/cards.txt") // chemin relatif depuis le projet
+                new InputStreamReader(
+                        Objects.requireNonNull(
+                                getClass().getResourceAsStream("/cards.txt"),
+                                "cards.txt not found in resources/"
+                        )
+                )
         )) {
             String line;
             while ((line = br.readLine()) != null) {
                 String[] split = line.split(";");
                 int id = Integer.parseInt(split[0]);
                 int value = Integer.parseInt(split[1]);
-                String img = split[2];
+                String img = split[2]; // ex: images/ghislain.jpg
+
                 cards.add(new Card(id, value, img));
             }
+
         } catch (Exception e) {
             throw new RuntimeException("Failed to load card list : " + path + " (" + e.getMessage() + ")");
         }
     }
+
 
 
     public void shuffle() {

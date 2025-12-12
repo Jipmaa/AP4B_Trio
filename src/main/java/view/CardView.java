@@ -32,7 +32,7 @@ public class CardView extends StackPane {
     private void loadImagesIfNeeded() {
         if (backImage == null) {
             try {
-                backImage = new Image(new FileInputStream("resources/images/back.png"));
+                backImage = new Image(getClass().getResourceAsStream("/images/back.png"));
             } catch (Exception e) {
                 System.out.println("Missing back.png");
             }
@@ -40,26 +40,30 @@ public class CardView extends StackPane {
 
         if (!imageCache.isEmpty()) return;
 
-        try {
-            var lines = java.nio.file.Files.readAllLines(
-                    java.nio.file.Paths.get("resources/cards.txt")
-            );
+        try (var stream = getClass().getResourceAsStream("/cards.txt")) {
 
-            for (String line : lines) {
-                if (!line.contains("=")) continue;
-
-                String[] parts = line.split("=");
-                int value = Integer.parseInt(parts[0].trim());
-                String path = parts[1].trim();
-
-                Image img = new Image(new FileInputStream("resources/" + path));
-                imageCache.put(value, img);
+            if (stream == null) {
+                System.out.println("cards.txt introuvable !");
+                return;
             }
 
-        } catch (IOException e) {
-            System.out.println("Erreur lecture cards.txt");
+            var lines = new java.io.BufferedReader(new java.io.InputStreamReader(stream)).lines();
+
+            lines.forEach(line -> {
+                // TON cards.txt est au format : id;value;images/xxx.jpg
+                String[] split = line.split(";");
+                int value = Integer.parseInt(split[1]);
+                String imagePath = split[2];
+
+                Image img = new Image(getClass().getResourceAsStream("/" + imagePath));
+                imageCache.put(value, img);
+            });
+
+        } catch (Exception e) {
+            System.out.println("Erreur lecture cards.txt : " + e);
         }
     }
+
 
     public void updateImage() {
         if (card.isFlipped()) {
