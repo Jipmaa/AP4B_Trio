@@ -68,24 +68,35 @@ public class Player {
         }
 
         int cardIndex = hand.indexOf(card);
+        int handSize = hand.size();
 
-        // Première carte (plus petite)
+        // Première carte (plus petite) - peut être retournée si jamais révélée
         if (cardIndex == 0 && lowestRevealedIndex == -1) {
             return true;
         }
 
-        // Dernière carte (plus grande)
-        if (cardIndex == hand.size() - 1 && highestRevealedIndex == -1) {
+        // Dernière carte (plus grande) - peut être retournée si jamais révélée
+        if (cardIndex == handSize - 1 && highestRevealedIndex == -1) {
             return true;
         }
 
         // Deuxième carte si la première a été révélée
-        if (cardIndex == 1 && lowestRevealedIndex == 0) {
+        if (lowestRevealedIndex == 0 && cardIndex == 1) {
+            return true;
+        }
+
+        // Troisième carte si les deux premières ont été révélées
+        if (lowestRevealedIndex == 1 && cardIndex == 2) {
             return true;
         }
 
         // Avant-dernière carte si la dernière a été révélée
-        if (cardIndex == hand.size() - 2 && highestRevealedIndex == hand.size() - 1) {
+        if (highestRevealedIndex == handSize - 1 && cardIndex == handSize - 2) {
+            return true;
+        }
+
+        // Avant-avant-dernière carte si les deux dernières ont été révélées
+        if (highestRevealedIndex == handSize - 2 && cardIndex == handSize - 3) {
             return true;
         }
 

@@ -40,6 +40,9 @@ public class Game {
     }
 
     public void distributeCards() {
+        // Vider le board d'abord
+        board.getCenterCards().clear();
+
         List<Card> allCards = new ArrayList<>(deck.getCards());
         int playerCount = players.size();
         int cardsPerPlayer = 0;
@@ -86,7 +89,6 @@ public class Game {
 
         // Mettre le reste au centre (mode solo uniquement)
         if (mode != Mode.TEAM) {
-            board.getCenterCards().clear();
             for (int i = 0; i < centerCards && cardIndex < allCards.size(); i++) {
                 board.addCard(allCards.get(cardIndex++));
             }

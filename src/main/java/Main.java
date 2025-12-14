@@ -11,7 +11,7 @@ public class Main extends Application {
     @Override
     public void start(Stage stage) {
         Scene scene = new Scene(new javafx.scene.layout.StackPane(), 1200, 800);
-        
+
         scene.setOnKeyPressed(event -> {
             if (event.getCode() == KeyCode.F11) {
                 stage.setFullScreen(!stage.isFullScreen());
@@ -21,6 +21,7 @@ public class Main extends Application {
         stage.setScene(scene);
         stage.setTitle("Trio - Le Jeu de Mémoire");
         stage.setResizable(true);
+        stage.setMaximized(true); // Maximiser la fenêtre par défaut
 
         NavigationController nav = new NavigationController(stage);
         nav.showMainMenu();
