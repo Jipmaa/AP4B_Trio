@@ -23,6 +23,7 @@ public class GameView extends BorderPane {
     private BoardView boardView;
     private Label turnsLabel;
     private Label modeLabel;
+    private Label revealedLabel;
     private List<PlayerView> playerViews;
     private VBox scoreboardBox;
     private Game game;
@@ -31,8 +32,11 @@ public class GameView extends BorderPane {
     public GameView(Game game, GameController controller) {
         this.game = game;
         this.controller = controller;
-        this.boardView = new BoardView(game.getBoard(), controller);
+        this.boardView = new BoardView(game, controller);
         this.playerViews = new ArrayList<>();
+
+        // Configurer le callback pour les changements d'état
+        controller.setOnGameStateChanged(() -> refresh());
 
         // Background
         try {
@@ -67,10 +71,11 @@ public class GameView extends BorderPane {
         HBox topBar = createTopBar();
         layout.setTop(topBar);
 
-        // Center: Board
-        StackPane centerPane = new StackPane(boardView);
-        centerPane.setPadding(new Insets(10));
-        layout.setCenter(centerPane);
+        // Center: Board with player hands
+        ScrollPane scrollPane = new ScrollPane(boardView);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setStyle("-fx-background: transparent; -fx-background-color: transparent;");
+        layout.setCenter(scrollPane);
 
         // Right: Scoreboard
         scoreboardBox = createScoreboard();
@@ -103,15 +108,13 @@ public class GameView extends BorderPane {
         turnsLabel.setTextFill(Color.WHITE);
 
         // Cartes révélées
-        Label revealedLabel = new Label("Cartes: " + game.getRevealedCards().size() + "/3");
+        revealedLabel = new Label("Cartes: " + game.getRevealedCards().size() + "/3");
         revealedLabel.setFont(Font.font("Arial", FontWeight.NORMAL, 16));
         revealedLabel.setTextFill(Color.web("#4CAF50"));
 
-        // Boutons
-        Button endTurnBtn = createTopButton("Passer le Tour", "#FF9800");
+        // Bouton menu
         Button menuBtn = createTopButton("Menu", "#757575");
 
-        endTurnBtn.setOnAction(e -> controller.endTurn());
         menuBtn.setOnAction(e -> {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
             alert.setTitle("Confirmation");
@@ -124,17 +127,17 @@ public class GameView extends BorderPane {
             }
         });
 
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
         topBar.getChildren().addAll(
                 modeLabel,
                 new Separator(javafx.geometry.Orientation.VERTICAL),
                 turnsLabel,
                 revealedLabel,
-                new Region(), // Spacer
-                endTurnBtn,
+                spacer,
                 menuBtn
         );
-
-        HBox.setHgrow(topBar.getChildren().get(topBar.getChildren().size() - 3), Priority.ALWAYS);
 
         return topBar;
     }
@@ -183,8 +186,10 @@ public class GameView extends BorderPane {
             }
         } else {
             // Affichage par joueur
+            playerViews.clear();
             for (Player player : game.getPlayers()) {
                 PlayerView pv = new PlayerView(player);
+                pv.setActive(player.equals(game.getCurrentPlayer()));
                 playerViews.add(pv);
                 scoreboard.getChildren().add(pv);
             }
@@ -216,9 +221,14 @@ public class GameView extends BorderPane {
 
         // Ajouter les joueurs de l'équipe
         for (Player player : team.getPlayers()) {
-            Label playerLabel = new Label("  • " + player.getName() + ": " + player.getScore());
+            String playerText = "  • " + player.getName();
+            if (player.equals(game.getCurrentPlayer())) {
+                playerText += " (À TON TOUR)";
+            }
+            Label playerLabel = new Label(playerText);
             playerLabel.setFont(Font.font("Arial", FontWeight.NORMAL, 14));
-            playerLabel.setTextFill(Color.web("#B0B0B0"));
+            playerLabel.setTextFill(player.equals(game.getCurrentPlayer()) ?
+                    Color.web("#4CAF50") : Color.web("#B0B0B0"));
             teamBox.getChildren().add(playerLabel);
         }
 
@@ -228,25 +238,28 @@ public class GameView extends BorderPane {
     private String getModeText() {
         String base = game.getMode() == Game.Mode.TEAM ? "MODE ÉQUIPES" : "MODE SOLO";
         if (game.getMode() == Game.Mode.PICANTE) {
-            base += " 🌶️ PICANTE";
+            base = "MODE SOLO 🌶️ PICANTE";
         }
         return base;
     }
 
-    public void refresh(Game game) {
-        this.game = game;
+    public void refresh() {
+        // Mettre à jour les labels
         turnsLabel.setText("Tour: " + game.getCurrentPlayer().getName());
+        revealedLabel.setText("Cartes: " + game.getRevealedCards().size() + "/3");
 
-        // Update revealed cards count
-        ((Label) ((HBox) getTop()).getChildren().get(4)).setText(
-                "Cartes: " + game.getRevealedCards().size() + "/3"
-        );
-
+        // Rafraîchir le plateau
         boardView.refresh();
 
-        // Refresh scoreboard
+        // Rafraîchir le scoreboard
         BorderPane layout = (BorderPane) ((StackPane) getCenter()).getChildren().get(1);
-        layout.setRight(createScoreboard());
+        scoreboardBox = createScoreboard();
+        layout.setRight(scoreboardBox);
+
+        // Vérifier si la partie est terminée
+        if (game.isGameOver()) {
+            showGameOverDialog();
+        }
     }
 
     public void showGameOverDialog() {
@@ -276,6 +289,14 @@ public class GameView extends BorderPane {
                     .sorted((p1, p2) -> Integer.compare(p2.getScore(), p1.getScore()))
                     .forEach(p -> content.append(p.getName()).append(": ")
                             .append(p.getScore()).append(" points\n"));
+
+            Player winner = game.getPlayers().stream()
+                    .max((p1, p2) -> Integer.compare(p1.getScore(), p2.getScore()))
+                    .orElse(null);
+
+            if (winner != null) {
+                content.append("\n🏆 Gagnant: ").append(winner.getName());
+            }
         }
 
         alert.setContentText(content.toString());
@@ -286,13 +307,7 @@ public class GameView extends BorderPane {
 
         Optional<ButtonType> result = alert.showAndWait();
         if (result.isPresent()) {
-            if (result.get() == menuBtn) {
-                controller.returnToMenu();
-            }
-            // Pour rejouer, on retourne au menu pour le moment
-            else {
-                controller.returnToMenu();
-            }
+            controller.returnToMenu();
         }
     }
 }
