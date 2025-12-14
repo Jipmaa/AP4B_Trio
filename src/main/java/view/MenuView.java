@@ -31,6 +31,6 @@ public class MenuView {
         Scene scene = new Scene(root, 300, 200);
         stage.setScene(scene);
         stage.setTitle("Menu Principal");
-        stage.show();
+        navController.showGameSetup();
     }
 }
