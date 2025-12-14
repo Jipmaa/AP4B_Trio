@@ -30,7 +30,7 @@ public class NavigationController {
 
     public void startGame(Mode mode, int playerCount, String[] playerNames, String[][] teamNames) {
         Deck deck = new Deck("resources/cards.txt");
-        Board board = new Board(deck.getCards());
+        Board board = new Board(new ArrayList<>()); // Board vide au départ
 
         Game game = new Game(deck, mode, board);
 
