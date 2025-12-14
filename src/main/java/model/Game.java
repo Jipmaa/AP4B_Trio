@@ -19,11 +19,12 @@ public class Game {
 
     private int currentPlayerIndex = 0;
     private final List<Card> revealedCards = new ArrayList<>();
+    private boolean gameOver = false;
 
     public Game(Deck deck, Mode mode, Board board) {
         this.deck = deck;
         this.mode = mode;
-        this.board = new Board(deck.getCards());
+        this.board = board;
     }
 
     // ---------------------------
@@ -38,6 +39,60 @@ public class Game {
         teams.add(t);
     }
 
+    public void distributeCards() {
+        List<Card> allCards = new ArrayList<>(deck.getCards());
+        int playerCount = players.size();
+        int cardsPerPlayer = 0;
+        int centerCards = 0;
+
+        if (mode == Mode.TEAM) {
+            // En mode équipe, distribuer toutes les cartes
+            cardsPerPlayer = allCards.size() / playerCount;
+        } else {
+            // En mode solo, selon le nombre de joueurs
+            switch (playerCount) {
+                case 3:
+                    cardsPerPlayer = 9;
+                    centerCards = 9;
+                    break;
+                case 4:
+                    cardsPerPlayer = 7;
+                    centerCards = 8;
+                    break;
+                case 5:
+                    cardsPerPlayer = 6;
+                    centerCards = 6;
+                    break;
+                case 6:
+                    cardsPerPlayer = 5;
+                    centerCards = 6;
+                    break;
+                default:
+                    cardsPerPlayer = 7;
+                    centerCards = 8;
+            }
+        }
+
+        int cardIndex = 0;
+
+        // Distribuer aux joueurs
+        for (Player player : players) {
+            for (int i = 0; i < cardsPerPlayer && cardIndex < allCards.size(); i++) {
+                Card card = allCards.get(cardIndex++);
+                player.addCardToHand(card);
+            }
+            player.sortHand(); // Trier les cartes du joueur
+        }
+
+        // Mettre le reste au centre (mode solo uniquement)
+        if (mode != Mode.TEAM) {
+            board.getCenterCards().clear();
+            for (int i = 0; i < centerCards && cardIndex < allCards.size(); i++) {
+                board.addCard(allCards.get(cardIndex++));
+            }
+        }
+    }
+
     public Player getCurrentPlayer() {
         return players.get(currentPlayerIndex);
     }
@@ -46,55 +101,130 @@ public class Game {
     //        ACTIONS
     // ---------------------------
 
-    /** Player flips a card */
-    public boolean flipCard(Card card) {
+    /**
+     * Tentative de retourner une carte
+     */
+    public boolean attemptFlipCard(Card card) {
+        // Vérifier si la carte appartient au plateau
+        if (board.getCenterCards().contains(card)) {
+            return flipBoardCard(card);
+        }
+
+        // Vérifier si la carte appartient à un joueur
+        for (Player player : players) {
+            if (player.getHand().contains(card)) {
+                return flipPlayerCard(card, player);
+            }
+        }
+
+        return false;
+    }
+
+    private boolean flipBoardCard(Card card) {
         if (card.isFlipped()) return false;
 
         card.setFlipped(true);
         revealedCards.add(card);
 
-        if (revealedCards.size() == 3)
-            return checkTrio();
+        if (revealedCards.size() == 2) {
+            return checkPairMatch();
+        }
 
         return true;
     }
 
-    /** Determine if the 3 revealed cards form a valid trio */
-    private boolean checkTrio() {
+    private boolean flipPlayerCard(Card card, Player owner) {
+        if (card.isFlipped()) return false;
+
+        // Vérifier si le joueur peut retourner cette carte
+        if (!owner.canFlipCard(card)) {
+            return false;
+        }
+
+        card.setFlipped(true);
+        revealedCards.add(card);
+        owner.markCardRevealed(card);
+
+        if (revealedCards.size() == 2) {
+            return checkPairMatch();
+        }
+
+        return true;
+    }
+
+    /**
+     * Vérifie si les 2 premières cartes révélées correspondent
+     */
+    private boolean checkPairMatch() {
+        if (revealedCards.size() != 2) return false;
+
+        int v1 = revealedCards.get(0).getValue();
+        int v2 = revealedCards.get(1).getValue();
+
+        return v1 == v2;
+    }
+
+    /**
+     * Vérifie si les 3 cartes révélées forment un trio
+     */
+    public boolean checkTrio() {
         if (revealedCards.size() != 3) return false;
 
         int v1 = revealedCards.get(0).getValue();
         int v2 = revealedCards.get(1).getValue();
         int v3 = revealedCards.get(2).getValue();
 
-        boolean success = (v1 == v2 && v2 == v3);
-
-        if (success) rewardTrio();
-        else failTrio();
-
-        return success;
+        return (v1 == v2 && v2 == v3);
     }
 
-    private void rewardTrio() {
+    /**
+     * Récompenser le joueur pour un trio réussi
+     */
+    public void rewardTrio() {
         Player p = getCurrentPlayer();
         int pts = (mode == Mode.PICANTE ? 2 : 1);
 
         if (mode == Mode.TEAM) {
             Team t = findTeamOfPlayer(p);
-            if (t != null) t.addPoint(pts);
+            if (t != null) {
+                t.addPoint(pts);
+            }
         } else {
             p.addPoint(pts);
         }
 
+        // Retirer les cartes du jeu
+        for (Card card : revealedCards) {
+            board.removeCard(card);
+            for (Player player : players) {
+                player.removeCardFromHand(card);
+            }
+        }
+
         revealedCards.clear();
-        // Player plays again in trio rules
+
+        // Vérifier si la partie est terminée
+        checkGameOver();
     }
 
-    private void failTrio() {
-        // flip back cards
-        for (Card c : revealedCards)
+    /**
+     * Échec du trio - retourner les cartes
+     */
+    public void failTrio() {
+        for (Card c : revealedCards) {
             c.setFlipped(false);
+        }
+        revealedCards.clear();
+        nextPlayer();
+    }
 
+    /**
+     * Échec de la paire - retourner les cartes après un délai
+     */
+    public void failPair() {
+        for (Card c : revealedCards) {
+            c.setFlipped(false);
+        }
         revealedCards.clear();
         nextPlayer();
     }
@@ -108,6 +238,26 @@ public class Game {
 
     public void nextPlayer() {
         currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
+    }
+
+    /**
+     * Vérifie si la partie est terminée (plus de trios possibles)
+     */
+    private void checkGameOver() {
+        // Compter le nombre total de cartes restantes
+        int totalCards = board.size();
+        for (Player player : players) {
+            totalCards += player.getHand().size();
+        }
+
+        // Si moins de 3 cartes, la partie est terminée
+        if (totalCards < 3) {
+            gameOver = true;
+        }
+    }
+
+    public boolean isGameOver() {
+        return gameOver;
     }
 
     // ---------------------------
@@ -136,5 +286,9 @@ public class Game {
 
     public Mode getMode() {
         return mode;
+    }
+
+    public int getCurrentPlayerIndex() {
+        return currentPlayerIndex;
     }
 }

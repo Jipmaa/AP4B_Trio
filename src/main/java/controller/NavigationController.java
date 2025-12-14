@@ -45,7 +45,7 @@ public class NavigationController {
             Team team1 = new Team(teamNames[0][0]);
             Team team2 = new Team(teamNames[1][0]);
 
-            // Simple repartition
+            // Simple répartition
             for (int i = 0; i < players.size(); i++) {
                 if (i % 2 == 0) {
                     team1.addPlayer(players.get(i));
@@ -56,6 +56,9 @@ public class NavigationController {
             game.addTeam(team1);
             game.addTeam(team2);
         }
+
+        // Distribuer les cartes
+        game.distributeCards();
 
         GameController gameController = new GameController(game, this);
         GameView gameView = new GameView(game, gameController);
