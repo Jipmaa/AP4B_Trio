@@ -83,6 +83,8 @@ public class Game {
             for (int i = 0; i < cardsPerPlayer && cardIndex < allCards.size(); i++) {
                 Card card = allCards.get(cardIndex++);
                 player.addCardToHand(card);
+                // Les cartes des joueurs sont visibles pour eux-mêmes
+                card.setFlipped(true);
             }
             player.sortHand(); // Trier les cartes du joueur
         }
@@ -107,6 +109,11 @@ public class Game {
      * Tentative de retourner une carte
      */
     public boolean attemptFlipCard(Card card) {
+        // Vérifier si la carte est déjà révélée dans le tour actuel
+        if (revealedCards.contains(card)) {
+            return false;
+        }
+
         // Vérifier si la carte appartient au plateau
         if (board.getCenterCards().contains(card)) {
             return flipBoardCard(card);
@@ -123,10 +130,10 @@ public class Game {
     }
 
     private boolean flipBoardCard(Card card) {
-        if (card.isFlipped()) return false;
-
-        card.setFlipped(true);
+        // Les cartes du plateau ne sont pas "flipped" au sens de visibles au joueur
+        // Mais on les ajoute aux revealed cards
         revealedCards.add(card);
+        card.setFlipped(true);
 
         if (revealedCards.size() == 2) {
             return checkPairMatch();
@@ -136,14 +143,13 @@ public class Game {
     }
 
     private boolean flipPlayerCard(Card card, Player owner) {
-        if (card.isFlipped()) return false;
-
         // Vérifier si le joueur peut retourner cette carte
         if (!owner.canFlipCard(card)) {
             return false;
         }
 
-        card.setFlipped(true);
+        // Les cartes des joueurs sont déjà "flipped" (visibles pour eux)
+        // Mais on les marque comme révélées pour ce tour
         revealedCards.add(card);
         owner.markCardRevealed(card);
 
@@ -170,13 +176,22 @@ public class Game {
      * Vérifie si les 3 cartes révélées forment un trio
      */
     public boolean checkTrio() {
-        if (revealedCards.size() != 3) return false;
+        if (revealedCards.size() < 2) return false;
 
-        int v1 = revealedCards.get(0).getValue();
-        int v2 = revealedCards.get(1).getValue();
-        int v3 = revealedCards.get(2).getValue();
+        if (revealedCards.size() == 2) {
+            int v1 = revealedCards.get(0).getValue();
+            int v2 = revealedCards.get(1).getValue();
+            return (v1 == v2);
+        }
 
-        return (v1 == v2 && v2 == v3);
+        if (revealedCards.size() == 3) {
+            int v1 = revealedCards.get(0).getValue();
+            int v2 = revealedCards.get(1).getValue();
+            int v3 = revealedCards.get(2).getValue();
+            return (v1 == v2 && v2 == v3);
+        }
+
+        return false;
     }
 
     /**
@@ -214,7 +229,11 @@ public class Game {
      */
     public void failTrio() {
         for (Card c : revealedCards) {
-            c.setFlipped(false);
+            // Si la carte appartient au board, on la cache
+            if (board.getCenterCards().contains(c)) {
+                c.setFlipped(false);
+            }
+            // Les cartes des joueurs restent visibles pour eux
         }
         revealedCards.clear();
         nextPlayer();
@@ -225,7 +244,11 @@ public class Game {
      */
     public void failPair() {
         for (Card c : revealedCards) {
-            c.setFlipped(false);
+            // Si la carte appartient au board, on la cache
+            if (board.getCenterCards().contains(c)) {
+                c.setFlipped(false);
+            }
+            // Les cartes des joueurs restent visibles pour eux
         }
         revealedCards.clear();
         nextPlayer();
@@ -239,6 +262,8 @@ public class Game {
     }
 
     public void nextPlayer() {
+        // Réinitialiser les cartes révélées du joueur actuel
+        getCurrentPlayer().resetRevealedThisTurn();
         currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
     }
 
