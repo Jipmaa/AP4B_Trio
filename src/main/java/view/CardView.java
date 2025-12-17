@@ -17,6 +17,7 @@ public class CardView extends StackPane {
     private Card card;
     private ImageView imageView;
     private Runnable onClickCallback;
+    private boolean clickable = false;
 
     public CardView(Card card) {
         this.card = card;
@@ -27,26 +28,6 @@ public class CardView extends StackPane {
 
         setStyle("-fx-border-color: black; -fx-border-width: 2; -fx-border-radius: 6; -fx-background-radius: 6;");
         imageView.setStyle("-fx-border-radius: 6;");
-
-        // Ajouter un effet de survol
-        setOnMouseEntered(e -> {
-            if (!card.isFlipped()) {
-                setStyle("-fx-border-color: gold; -fx-border-width: 3; -fx-border-radius: 6; -fx-background-radius: 6;");
-                setCursor(Cursor.HAND);
-            }
-        });
-
-        setOnMouseExited(e -> {
-            setStyle("-fx-border-color: black; -fx-border-width: 2; -fx-border-radius: 6; -fx-background-radius: 6;");
-            setCursor(Cursor.DEFAULT);
-        });
-
-        // Gérer le clic
-        setOnMouseClicked(e -> {
-            if (onClickCallback != null && !card.isFlipped()) {
-                onClickCallback.run();
-            }
-        });
 
         getChildren().add(imageView);
     }
@@ -76,8 +57,14 @@ public class CardView extends StackPane {
                 int value = Integer.parseInt(split[1]);
                 String imagePath = split[2];
 
-                Image img = new Image(getClass().getResourceAsStream("/" + imagePath));
-                imageCache.put(value, img);
+                if (!imageCache.containsKey(value)) {
+                    try {
+                        Image img = new Image(getClass().getResourceAsStream("/" + imagePath));
+                        imageCache.put(value, img);
+                    } catch (Exception e) {
+                        System.out.println("Erreur chargement image: " + imagePath);
+                    }
+                }
             });
 
         } catch (Exception e) {
@@ -88,14 +75,53 @@ public class CardView extends StackPane {
     public void updateImage() {
         if (card.isFlipped()) {
             imageView.setImage(imageCache.getOrDefault(card.getValue(), backImage));
-            setCursor(Cursor.DEFAULT);
         } else {
             imageView.setImage(backImage);
-            setCursor(Cursor.HAND);
         }
         imageView.setFitWidth(100);
         imageView.setFitHeight(150);
         imageView.setPreserveRatio(true);
+    }
+
+    /**
+     * Active ou désactive la carte pour les clics
+     */
+    public void setClickable(boolean clickable) {
+        this.clickable = clickable;
+
+        if (clickable && !card.isFlipped()) {
+            // Activer les événements de souris
+            setOnMouseEntered(e -> {
+                setStyle("-fx-border-color: gold; -fx-border-width: 3; -fx-border-radius: 6; -fx-background-radius: 6;");
+                setCursor(Cursor.HAND);
+            });
+
+            setOnMouseExited(e -> {
+                setStyle("-fx-border-color: black; -fx-border-width: 2; -fx-border-radius: 6; -fx-background-radius: 6;");
+                setCursor(Cursor.DEFAULT);
+            });
+
+            setOnMouseClicked(e -> {
+                if (onClickCallback != null) {
+                    onClickCallback.run();
+                }
+            });
+
+            setOpacity(1.0);
+        } else {
+            // Désactiver tous les événements
+            setOnMouseEntered(null);
+            setOnMouseExited(null);
+            setOnMouseClicked(null);
+            setCursor(Cursor.DEFAULT);
+
+            // Réduire l'opacité des cartes non-cliquables qui ne sont pas retournées
+            if (!card.isFlipped()) {
+                setOpacity(0.6);
+            } else {
+                setOpacity(1.0);
+            }
+        }
     }
 
     public Card getCard() {

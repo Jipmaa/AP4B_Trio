@@ -10,8 +10,7 @@ public class Player {
     private Team team;      // null en mode solo
     private int score;
     private List<Card> hand;
-    private int lowestRevealedIndex = -1;  // -1 = aucune carte révélée du bas
-    private int highestRevealedIndex = -1; // -1 = aucune carte révélée du haut
+    private List<Card> revealedThisTurn = new ArrayList<>();  // Cartes révélées ce tour
 
     public Player(String name) {
         this.name = name;
@@ -51,6 +50,7 @@ public class Player {
 
     public void removeCardFromHand(Card card) {
         hand.remove(card);
+        revealedThisTurn.remove(card);
         card.setOwner(null);
     }
 
@@ -60,69 +60,58 @@ public class Player {
 
     /**
      * Vérifie si une carte peut être retournée selon les règles Trio
-     * Seules les cartes aux extrémités (non révélées) peuvent être retournées
+     * Seules les cartes aux extrémités (non révélées ce tour) peuvent être retournées
      */
     public boolean canFlipCard(Card card) {
         if (!hand.contains(card)) {
             return false;
         }
 
+        // Si la carte a déjà été révélée ce tour, on ne peut pas la retourner à nouveau
+        if (revealedThisTurn.contains(card)) {
+            return false;
+        }
+
         int cardIndex = hand.indexOf(card);
         int handSize = hand.size();
 
-        // Première carte (plus petite) - peut être retournée si jamais révélée
-        if (cardIndex == 0 && lowestRevealedIndex == -1) {
-            return true;
+        // Trouver l'index de la première carte non révélée à gauche
+        int leftMostUnrevealed = -1;
+        for (int i = 0; i < handSize; i++) {
+            if (!revealedThisTurn.contains(hand.get(i))) {
+                leftMostUnrevealed = i;
+                break;
+            }
         }
 
-        // Dernière carte (plus grande) - peut être retournée si jamais révélée
-        if (cardIndex == handSize - 1 && highestRevealedIndex == -1) {
-            return true;
+        // Trouver l'index de la dernière carte non révélée à droite
+        int rightMostUnrevealed = -1;
+        for (int i = handSize - 1; i >= 0; i--) {
+            if (!revealedThisTurn.contains(hand.get(i))) {
+                rightMostUnrevealed = i;
+                break;
+            }
         }
 
-        // Deuxième carte si la première a été révélée
-        if (lowestRevealedIndex == 0 && cardIndex == 1) {
-            return true;
-        }
-
-        // Troisième carte si les deux premières ont été révélées
-        if (lowestRevealedIndex == 1 && cardIndex == 2) {
-            return true;
-        }
-
-        // Avant-dernière carte si la dernière a été révélée
-        if (highestRevealedIndex == handSize - 1 && cardIndex == handSize - 2) {
-            return true;
-        }
-
-        // Avant-avant-dernière carte si les deux dernières ont été révélées
-        if (highestRevealedIndex == handSize - 2 && cardIndex == handSize - 3) {
-            return true;
-        }
-
-        return false;
+        // La carte doit être soit la plus à gauche, soit la plus à droite parmi les non-révélées
+        return (cardIndex == leftMostUnrevealed || cardIndex == rightMostUnrevealed);
     }
 
     public void markCardRevealed(Card card) {
-        int cardIndex = hand.indexOf(card);
-        if (cardIndex == -1) return;
-
-        // Mettre à jour les indices de cartes révélées
-        if (cardIndex <= hand.size() / 2) {
-            // Carte du côté bas (petites valeurs)
-            lowestRevealedIndex = cardIndex;
-        } else {
-            // Carte du côté haut (grandes valeurs)
-            highestRevealedIndex = cardIndex;
+        if (hand.contains(card) && !revealedThisTurn.contains(card)) {
+            revealedThisTurn.add(card);
         }
     }
 
-    public int getLowestRevealedIndex() {
-        return lowestRevealedIndex;
+    /**
+     * Réinitialise les cartes révélées ce tour (appelé au début d'un nouveau tour)
+     */
+    public void resetRevealedThisTurn() {
+        revealedThisTurn.clear();
     }
 
-    public int getHighestRevealedIndex() {
-        return highestRevealedIndex;
+    public List<Card> getRevealedThisTurn() {
+        return revealedThisTurn;
     }
 
     @Override

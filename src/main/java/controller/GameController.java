@@ -10,6 +10,7 @@ public class GameController {
     private Game game;
     private NavigationController navController;
     private Runnable onGameStateChanged;
+    private boolean isProcessing = false; // Bloquer les clics pendant les animations
 
     public GameController(Game game, NavigationController navController) {
         this.game = game;
@@ -30,6 +31,11 @@ public class GameController {
      * Gérer le clic sur une carte
      */
     public void handleCardClick(Card card) {
+        // Bloquer si une animation est en cours
+        if (isProcessing) {
+            return;
+        }
+
         // Ne rien faire si la carte est déjà retournée
         if (card.isFlipped()) {
             return;
@@ -52,6 +58,7 @@ public class GameController {
             // Vérifier si les 2 cartes correspondent
             if (!game.checkTrio()) {
                 // Les cartes ne correspondent pas
+                isProcessing = true; // Bloquer les clics
                 Platform.runLater(() -> {
                     showAlert("Cartes différentes", "Les deux cartes ne correspondent pas!", Alert.AlertType.INFORMATION);
 
@@ -61,6 +68,7 @@ public class GameController {
                             Thread.sleep(1500);
                             Platform.runLater(() -> {
                                 game.failPair();
+                                isProcessing = false; // Débloquer les clics
                                 notifyGameStateChanged();
                             });
                         } catch (InterruptedException e) {
@@ -85,6 +93,7 @@ public class GameController {
                     });
                 }
             } else {
+                isProcessing = true; // Bloquer les clics
                 showAlert("Trio échoué", "Les trois cartes ne forment pas un trio!", Alert.AlertType.INFORMATION);
 
                 // Attendre 1.5 secondes puis retourner les cartes
@@ -93,6 +102,7 @@ public class GameController {
                         Thread.sleep(1500);
                         Platform.runLater(() -> {
                             game.failTrio();
+                            isProcessing = false; // Débloquer les clics
                             notifyGameStateChanged();
                         });
                     } catch (InterruptedException e) {
@@ -116,6 +126,10 @@ public class GameController {
 
     public Game getGame() {
         return game;
+    }
+
+    public boolean isProcessing() {
+        return isProcessing;
     }
 
     private void showAlert(String title, String content, Alert.AlertType type) {

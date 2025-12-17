@@ -73,6 +73,12 @@ public class BoardView extends VBox {
 
             for (Card card : game.getBoard().getCenterCards()) {
                 CardView cv = new CardView(card);
+                cv.updateImage();
+
+                // Vérifier si la carte peut être cliquée
+                boolean canClick = !controller.isProcessing() && !game.getRevealedCards().contains(card);
+                cv.setClickable(canClick);
+
                 cv.setOnCardClick(() -> {
                     controller.handleCardClick(card);
                 });
@@ -124,9 +130,17 @@ public class BoardView extends VBox {
 
         for (Card card : player.getHand()) {
             CardView cv = new CardView(card);
+            cv.updateImage(); // Les cartes des joueurs sont toujours visibles
+
+            // Déterminer si la carte est cliquable
+            boolean canClick = !controller.isProcessing()
+                    && player.canFlipCard(card)
+                    && !game.getRevealedCards().contains(card);
+
+            cv.setClickable(canClick);
 
             // Ajouter un indicateur visuel si la carte peut être retournée
-            if (isCurrentPlayer && player.canFlipCard(card) && !card.isFlipped()) {
+            if (isCurrentPlayer && canClick) {
                 cv.setStyle("-fx-border-color: #4CAF50; -fx-border-width: 3; -fx-border-radius: 6; -fx-background-radius: 6;");
             }
 
