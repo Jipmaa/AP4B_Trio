@@ -82,7 +82,7 @@ public class GameSetupView extends StackPane {
         picanteCheckBox.setTextFill(Color.web("#FF6B6B"));
         picanteCheckBox.setStyle("-fx-cursor: hand;");
 
-        // Nombre de joueurs
+        // Nombre de joueurs - MINIMUM 3 JOUEURS
         VBox playerCountBox = createSection("Nombre de Joueurs");
         HBox spinnerBox = new HBox(15);
         spinnerBox.setAlignment(Pos.CENTER);
@@ -91,7 +91,8 @@ public class GameSetupView extends StackPane {
         playerLabel.setFont(Font.font("Arial", FontWeight.BOLD, 16));
         playerLabel.setTextFill(Color.WHITE);
 
-        playerSpinner = new Spinner<>(2, 4, 2);
+        // MODIFIÉ: Spinner de 3 à 6 joueurs (minimum 3)
+        playerSpinner = new Spinner<>(3, 6, 3);
         playerSpinner.setEditable(false);
         playerSpinner.setPrefWidth(80);
         playerSpinner.setStyle("-fx-font-size: 16px;");
@@ -101,7 +102,7 @@ public class GameSetupView extends StackPane {
 
         // Noms des joueurs
         playerNamesBox = createSection("Noms des Joueurs");
-        updatePlayerNameFields(2);
+        updatePlayerNameFields(3); // Commencer avec 3 joueurs
 
         // Noms des équipes (caché par défaut)
         teamNamesBox = createSection("Noms des Équipes");
@@ -221,7 +222,7 @@ public class GameSetupView extends StackPane {
         RadioButton selectedModeRadio = (RadioButton) modeGroup.getSelectedToggle();
         Mode mode = selectedModeRadio.getText().equals("Équipes") ? Mode.TEAM : Mode.NORMAL;
         boolean isPicante = picanteCheckBox.isSelected();
-        
+
         if (isPicante && mode == Mode.NORMAL) {
             mode = Mode.PICANTE;
         }
