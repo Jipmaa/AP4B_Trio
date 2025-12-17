@@ -8,7 +8,6 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
-import model.Board;
 import model.Card;
 import model.Game;
 import model.Player;
@@ -75,7 +74,7 @@ public class BoardView extends VBox {
                 CardView cv = new CardView(card);
                 cv.updateImage();
 
-                // Vérifier si la carte peut être cliquée
+                // Les cartes du plateau sont toujours cliquables (sauf si animation en cours)
                 boolean canClick = !controller.isProcessing() && !game.getRevealedCards().contains(card);
                 cv.setClickable(canClick);
 
@@ -130,9 +129,19 @@ public class BoardView extends VBox {
 
         for (Card card : player.getHand()) {
             CardView cv = new CardView(card);
-            cv.updateImage(); // Les cartes des joueurs sont toujours visibles
+
+            // IMPORTANT: Seules les cartes du joueur actuel sont visibles (faces retournées)
+            // Les cartes des adversaires restent face cachée
+            if (isCurrentPlayer) {
+                card.setFlipped(true); // Le joueur voit ses propres cartes
+            } else {
+                card.setFlipped(false); // Les adversaires voient le dos des cartes
+            }
+
+            cv.updateImage();
 
             // Déterminer si la carte est cliquable
+            // On peut cliquer sur les cartes de N'IMPORTE QUEL joueur si elles sont aux extrémités
             boolean canClick = !controller.isProcessing()
                     && player.canFlipCard(card)
                     && !game.getRevealedCards().contains(card);
@@ -140,14 +149,12 @@ public class BoardView extends VBox {
             cv.setClickable(canClick);
 
             // Ajouter un indicateur visuel si la carte peut être retournée
-            if (isCurrentPlayer && canClick) {
+            if (canClick) {
                 cv.setStyle("-fx-border-color: #4CAF50; -fx-border-width: 3; -fx-border-radius: 6; -fx-background-radius: 6;");
             }
 
             cv.setOnCardClick(() -> {
-                if (isCurrentPlayer) {
-                    controller.handleCardClick(card);
-                }
+                controller.handleCardClick(card);
             });
 
             cardsBox.getChildren().add(cv);

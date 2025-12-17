@@ -83,8 +83,6 @@ public class Game {
             for (int i = 0; i < cardsPerPlayer && cardIndex < allCards.size(); i++) {
                 Card card = allCards.get(cardIndex++);
                 player.addCardToHand(card);
-                // Les cartes des joueurs sont visibles pour eux-mêmes
-                card.setFlipped(true);
             }
             player.sortHand(); // Trier les cartes du joueur
         }
@@ -130,8 +128,7 @@ public class Game {
     }
 
     private boolean flipBoardCard(Card card) {
-        // Les cartes du plateau ne sont pas "flipped" au sens de visibles au joueur
-        // Mais on les ajoute aux revealed cards
+        // Les cartes du plateau sont retournées
         revealedCards.add(card);
         card.setFlipped(true);
 
@@ -148,8 +145,7 @@ public class Game {
             return false;
         }
 
-        // Les cartes des joueurs sont déjà "flipped" (visibles pour eux)
-        // Mais on les marque comme révélées pour ce tour
+        // Ajouter aux cartes révélées ce tour
         revealedCards.add(card);
         owner.markCardRevealed(card);
 
@@ -233,8 +229,14 @@ public class Game {
             if (board.getCenterCards().contains(c)) {
                 c.setFlipped(false);
             }
-            // Les cartes des joueurs restent visibles pour eux
+            // Les cartes des joueurs ne changent pas d'état visible/caché
         }
+
+        // Réinitialiser les cartes révélées de tous les joueurs
+        for (Player player : players) {
+            player.resetRevealedThisTurn();
+        }
+
         revealedCards.clear();
         nextPlayer();
     }
@@ -248,8 +250,14 @@ public class Game {
             if (board.getCenterCards().contains(c)) {
                 c.setFlipped(false);
             }
-            // Les cartes des joueurs restent visibles pour eux
+            // Les cartes des joueurs ne changent pas d'état visible/caché
         }
+
+        // Réinitialiser les cartes révélées de tous les joueurs
+        for (Player player : players) {
+            player.resetRevealedThisTurn();
+        }
+
         revealedCards.clear();
         nextPlayer();
     }
@@ -262,8 +270,10 @@ public class Game {
     }
 
     public void nextPlayer() {
-        // Réinitialiser les cartes révélées du joueur actuel
-        getCurrentPlayer().resetRevealedThisTurn();
+        // Réinitialiser les cartes révélées de tous les joueurs pour le nouveau tour
+        for (Player player : players) {
+            player.resetRevealedThisTurn();
+        }
         currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
     }
 
