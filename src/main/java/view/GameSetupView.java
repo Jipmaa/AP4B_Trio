@@ -115,6 +115,38 @@ public class GameSetupView extends StackPane {
             }
         });
 
+        // Dans le constructeur de GameSetupView.java
+
+// 1. Modifier les limites du spinner pour permettre 4 ou 6 en équipe
+        teamMode.selectedProperty().addListener((obs, oldVal, isTeamMode) -> {
+            teamNamesBox.setVisible(isTeamMode);
+            teamNamesBox.setManaged(isTeamMode);
+            picanteCheckBox.setDisable(isTeamMode);
+
+            if (isTeamMode) {
+                picanteCheckBox.setSelected(false);
+                // En mode équipe : minimum 4, maximum 6
+                if (playerSpinner.getValue() % 2 != 0) {
+                    playerSpinner.getValueFactory().setValue(4);
+                }
+            }
+        });
+
+// 2. Empêcher la sélection de nombres impairs en mode équipe
+        playerSpinner.valueProperty().addListener((obs, oldVal, newVal) -> {
+            RadioButton selectedModeRadio = (RadioButton) modeGroup.getSelectedToggle();
+            if (selectedModeRadio.getText().equals("Équipes")) {
+                if (newVal % 2 != 0) {
+                    // Si l'utilisateur tente d'aller à 3 ou 5, on saute au nombre pair suivant/précédent
+                    int adjusted = (newVal > oldVal) ? newVal + 1 : newVal - 1;
+                    if (adjusted < 4) adjusted = 4;
+                    if (adjusted > 6) adjusted = 6;
+                    playerSpinner.getValueFactory().setValue(adjusted);
+                }
+            }
+            updatePlayerNameFields(playerSpinner.getValue());
+        });
+
         // Boutons
         HBox buttonBox = new HBox(20);
         buttonBox.setAlignment(Pos.CENTER);

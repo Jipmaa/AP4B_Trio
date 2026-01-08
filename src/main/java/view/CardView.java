@@ -158,4 +158,5 @@ public class CardView extends StackPane {
     public void setOnCardClick(Runnable callback) {
         this.onClickCallback = callback;
     }
+
 }

@@ -32,6 +32,24 @@ public class Team {
         }
     }
 
+    // Dans Team.java
+    public Player getPartner(Player currentPlayer) {
+        return members.stream()
+                .filter(p -> !p.equals(currentPlayer))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private boolean canExchange = true; // Nouveau flag pour la règle d'échange
+
+    public boolean hasExchangeRight() {
+        return canExchange;
+    }
+
+    public void setExchangeRight(boolean available) {
+        this.canExchange = available;
+    }
+
     public List<Player> getPlayers() {
         return members;
     }

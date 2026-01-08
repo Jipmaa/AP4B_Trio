@@ -42,19 +42,26 @@ public class NavigationController {
         }
 
         if (mode == Mode.TEAM) {
-            Team team1 = new Team(teamNames[0][0]);
-            Team team2 = new Team(teamNames[1][0]);
+            // Création des 3 équipes (pour 6 joueurs) ou 2 équipes (pour 4 joueurs)
+            int numTeams = (playerCount == 6) ? 3 : 2;
 
-            // Simple répartition
+            for (int i = 0; i < numTeams; i++) {
+                // On récupère le nom saisi ou on en génère un par défaut
+                String tName = (teamNames != null && teamNames.length > i && teamNames[i][0] != null)
+                        ? teamNames[i][0] : "Équipe " + (i + 1);
+                Team team = new Team(tName);
+                game.addTeam(team);
+            }
+
+            // Répartition des joueurs dans les équipes :
+            // Joueur 0 et 1 -> Équipe 0, Joueur 2 et 3 -> Équipe 1, etc.
             for (int i = 0; i < players.size(); i++) {
-                if (i % 2 == 0) {
-                    team1.addPlayer(players.get(i));
-                } else {
-                    team2.addPlayer(players.get(i));
+                int teamIndex = i / 2;
+                // Sécurité pour ne pas dépasser le nombre d'équipes créées
+                if (teamIndex < game.getTeams().size()) {
+                    game.getTeams().get(teamIndex).addPlayer(players.get(i));
                 }
             }
-            game.addTeam(team1);
-            game.addTeam(team2);
         }
 
         // Distribuer les cartes

@@ -106,6 +106,21 @@ public class Game {
     /**
      * Tentative de retourner une carte
      */
+
+    public void performExchange(Player from, Player to, Card card) {
+        Team team = findTeamOfPlayer(from);
+        if (team != null && team.hasExchangeRight()) {
+            from.removeCardFromHand(card);
+            to.addCardToHand(card);
+
+            from.sortHand();
+            to.sortHand();
+
+            team.setExchangeRight(false); // Utilise le droit
+        }
+    }
+
+
     public boolean attemptFlipCard(Card card) {
         // 1. Vérifier si la carte est déjà révélée ce tour-ci
         if (revealedCards.contains(card)) {
@@ -207,6 +222,12 @@ public class Game {
         revealedCards.clear();
 
         // ICI : On vérifie si ce point était le point de la victoire
+        checkGameOver();
+        if (this.mode == Mode.TEAM) {
+            for (Team t : teams) {
+                t.setExchangeRight(true);
+            }
+        }
         checkGameOver();
     }
 
