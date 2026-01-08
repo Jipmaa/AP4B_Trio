@@ -63,19 +63,17 @@ public class Player {
      * Seules les cartes aux extrémités (non révélées ce tour) peuvent être retournées
      */
     public boolean canFlipCard(Card card) {
-        if (!hand.contains(card)) {
-            return false;
-        }
-
-        // Si la carte a déjà été révélée ce tour, on ne peut pas la retourner à nouveau
-        if (revealedThisTurn.contains(card)) {
-            return false;
-        }
+        if (!hand.contains(card)) return false;
+        if (revealedThisTurn.contains(card)) return false;
 
         int cardIndex = hand.indexOf(card);
         int handSize = hand.size();
 
-        // Trouver l'index de la première carte non révélée à gauche
+
+        if (revealedThisTurn.isEmpty()) {
+            return cardIndex == 0 || cardIndex == handSize - 1;
+        }
+
         int leftMostUnrevealed = -1;
         for (int i = 0; i < handSize; i++) {
             if (!revealedThisTurn.contains(hand.get(i))) {
@@ -84,7 +82,6 @@ public class Player {
             }
         }
 
-        // Trouver l'index de la dernière carte non révélée à droite
         int rightMostUnrevealed = -1;
         for (int i = handSize - 1; i >= 0; i--) {
             if (!revealedThisTurn.contains(hand.get(i))) {
@@ -93,9 +90,9 @@ public class Player {
             }
         }
 
-        // La carte doit être soit la plus à gauche, soit la plus à droite parmi les non-révélées
-        return (cardIndex == leftMostUnrevealed || cardIndex == rightMostUnrevealed);
+        return cardIndex == leftMostUnrevealed || cardIndex == rightMostUnrevealed;
     }
+
 
     public void markCardRevealed(Card card) {
         if (hand.contains(card) && !revealedThisTurn.contains(card)) {

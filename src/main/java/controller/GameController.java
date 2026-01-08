@@ -31,44 +31,36 @@ public class GameController {
      * Gérer le clic sur une carte
      */
     public void handleCardClick(Card card) {
-        // Bloquer si une animation est en cours
         if (isProcessing) {
             return;
         }
 
-        // Ne rien faire si la carte est déjà retournée
-        if (card.isFlipped()) {
-            return;
-        }
-
-        // Tenter de retourner la carte
         boolean success = game.attemptFlipCard(card);
 
         if (!success) {
-            showAlert("Action impossible", "Vous ne pouvez pas retourner cette carte.", Alert.AlertType.WARNING);
+            showAlert(
+                    "Action impossible",
+                    "Vous ne pouvez pas retourner cette carte.",
+                    Alert.AlertType.WARNING
+            );
             return;
         }
 
         notifyGameStateChanged();
 
-        // Gérer les cas selon le nombre de cartes révélées
         int revealedCount = game.getRevealedCards().size();
 
         if (revealedCount == 2) {
-            // Vérifier si les 2 cartes correspondent
             if (!game.checkTrio()) {
-                // Les cartes ne correspondent pas
-                isProcessing = true; // Bloquer les clics
+                isProcessing = true;
                 Platform.runLater(() -> {
                     showAlert("Cartes différentes", "Les deux cartes ne correspondent pas!", Alert.AlertType.INFORMATION);
-
-                    // Attendre 1.5 secondes puis retourner les cartes
                     new Thread(() -> {
                         try {
                             Thread.sleep(1500);
                             Platform.runLater(() -> {
                                 game.failPair();
-                                isProcessing = false; // Débloquer les clics
+                                isProcessing = false;
                                 notifyGameStateChanged();
                             });
                         } catch (InterruptedException e) {
@@ -77,32 +69,20 @@ public class GameController {
                     }).start();
                 });
             }
-            // Si les cartes correspondent, attendre la 3ème carte
-        } else if (revealedCount == 3) {
-            // Vérifier le trio
+        }
+        else if (revealedCount == 3) {
             if (game.checkTrio()) {
                 showAlert("Trio réussi!", "Bravo! Vous avez trouvé un trio!", Alert.AlertType.INFORMATION);
                 game.rewardTrio();
-
-                // Vérifier si la partie est terminée
-                if (game.isGameOver()) {
-                    Platform.runLater(() -> {
-                        if (onGameStateChanged != null) {
-                            onGameStateChanged.run();
-                        }
-                    });
-                }
             } else {
-                isProcessing = true; // Bloquer les clics
+                isProcessing = true;
                 showAlert("Trio échoué", "Les trois cartes ne forment pas un trio!", Alert.AlertType.INFORMATION);
-
-                // Attendre 1.5 secondes puis retourner les cartes
                 new Thread(() -> {
                     try {
                         Thread.sleep(1500);
                         Platform.runLater(() -> {
                             game.failTrio();
-                            isProcessing = false; // Débloquer les clics
+                            isProcessing = false;
                             notifyGameStateChanged();
                         });
                     } catch (InterruptedException e) {
@@ -110,10 +90,10 @@ public class GameController {
                     }
                 }).start();
             }
-
             notifyGameStateChanged();
         }
     }
+
 
     public void endTurn() {
         game.nextPlayer();

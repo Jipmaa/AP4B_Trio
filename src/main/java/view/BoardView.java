@@ -142,9 +142,9 @@ public class BoardView extends VBox {
 
             // Déterminer si la carte est cliquable
             // On peut cliquer sur les cartes de N'IMPORTE QUEL joueur si elles sont aux extrémités
-            boolean canClick = !controller.isProcessing()
-                    && player.canFlipCard(card)
-                    && !game.getRevealedCards().contains(card);
+            boolean canClick =
+                    !controller.isProcessing()
+                            && player.canFlipCard(card);
 
             cv.setClickable(canClick);
 

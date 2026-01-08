@@ -109,21 +109,18 @@ public class Game {
     public boolean attemptFlipCard(Card card) {
         // Vérifier si la carte est déjà révélée dans le tour actuel
         if (revealedCards.contains(card)) {
+            System.out.println("Erreur numéro 1");
             return false;
         }
 
         // Vérifier si la carte appartient au plateau
         if (board.getCenterCards().contains(card)) {
+
+            System.out.println("Erreur numéro 3");
             return flipBoardCard(card);
         }
 
-        // Vérifier si la carte appartient à un joueur
-        for (Player player : players) {
-            if (player.getHand().contains(card)) {
-                return flipPlayerCard(card, player);
-            }
-        }
-
+        System.out.println("Erreur numéro 2");
         return false;
     }
 
@@ -140,12 +137,13 @@ public class Game {
     }
 
     private boolean flipPlayerCard(Card card, Player owner) {
-        // Vérifier si le joueur peut retourner cette carte
+
         if (!owner.canFlipCard(card)) {
             return false;
         }
 
-        // Ajouter aux cartes révélées ce tour
+        card.setFlipped(true);
+
         revealedCards.add(card);
         owner.markCardRevealed(card);
 
@@ -155,6 +153,8 @@ public class Game {
 
         return true;
     }
+
+
 
     /**
      * Vérifie si les 2 premières cartes révélées correspondent
