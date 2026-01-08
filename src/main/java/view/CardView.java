@@ -73,14 +73,25 @@ public class CardView extends StackPane {
     }
 
     public void updateImage() {
-        if (card.isFlipped()) {
-            imageView.setImage(imageCache.getOrDefault(card.getValue(), backImage));
-        } else {
-            imageView.setImage(backImage);
-        }
-        imageView.setFitWidth(100);
-        imageView.setFitHeight(150);
-        imageView.setPreserveRatio(true);
+            Image img = card.isFlipped() ? imageCache.getOrDefault(card.getValue(), backImage) : backImage;
+            imageView.setImage(img);
+            // 1. On fixe la hauteur de référence
+            double targetHeight = 150;
+            double targetWidth = targetHeight * (2.0 / 3.0); // Calcule la largeur pour un ratio 2:3
+
+            // 2. Configuration du cadre
+            imageView.setFitHeight(targetHeight);
+            imageView.setFitWidth(targetWidth);
+            imageView.setPreserveRatio(false); // On force les dimensions du cadre
+
+            // 3. Le CROP (On centre la découpe dans l'image d'origine)
+            // On calcule la largeur que l'image devrait avoir pour être au ratio 2:3
+            double imgWidth = img.getWidth();
+            double imgHeight = img.getHeight();
+            double widthAtRatio = imgHeight * (2.0 / 3.0);
+
+            // On centre le rectangle de vue sur l'axe X
+            double xOffset = (imgWidth - widthAtRatio) / 2;
     }
 
     /**
