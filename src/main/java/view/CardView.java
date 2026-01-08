@@ -71,27 +71,43 @@ public class CardView extends StackPane {
             System.out.println("Erreur lecture cards.txt : " + e);
         }
     }
+    private boolean forceVisible = false; // Flag pour la main du joueur local
+
+    public void setForceVisible(boolean forceVisible) {
+        this.forceVisible = forceVisible;
+        updateImage(); // On rafraîchit l'image dès que la visibilité change
+    }
 
     public void updateImage() {
-            Image img = card.isFlipped() ? imageCache.getOrDefault(card.getValue(), backImage) : backImage;
-            imageView.setImage(img);
-            // 1. On fixe la hauteur de référence
-            double targetHeight = 150;
-            double targetWidth = targetHeight * (2.0 / 3.0); // Calcule la largeur pour un ratio 2:3
+        // 1. Déterminer si on doit montrer la face ou le dos
+        // On montre la face si la carte est retournée OU si c'est la main du joueur (forceVisible)
+        boolean showFront = card.isFlipped() || forceVisible;
 
-            // 2. Configuration du cadre
+        Image img = showFront ? imageCache.getOrDefault(card.getValue(), backImage) : backImage;
+        imageView.setImage(img);
+
+        if (img != null) {
+            // 2. Configuration du cadre (Ratio 2:3 basé sur la hauteur)
+            double targetHeight = 150;
+            double targetWidth = targetHeight * (2.0 / 3.0); // Donne 100px pour une hauteur de 150px
+
             imageView.setFitHeight(targetHeight);
             imageView.setFitWidth(targetWidth);
-            imageView.setPreserveRatio(false); // On force les dimensions du cadre
+            imageView.setPreserveRatio(false); // On force le cadre à 2:3
 
-            // 3. Le CROP (On centre la découpe dans l'image d'origine)
-            // On calcule la largeur que l'image devrait avoir pour être au ratio 2:3
+            // 3. Le CROP (Calcul de la zone de l'image source à afficher)
             double imgWidth = img.getWidth();
             double imgHeight = img.getHeight();
+
+            // On calcule la largeur que l'image source devrait avoir pour être en 2:3
             double widthAtRatio = imgHeight * (2.0 / 3.0);
 
-            // On centre le rectangle de vue sur l'axe X
+            // On centre la zone de découpe horizontalement (xOffset)
             double xOffset = (imgWidth - widthAtRatio) / 2;
+
+            // IMPORTANT : Application du rectangle de vue pour effectuer le crop réel
+            imageView.setViewport(new javafx.geometry.Rectangle2D(xOffset, 0, widthAtRatio, imgHeight));
+        }
     }
 
     /**

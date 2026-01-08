@@ -130,13 +130,12 @@ public class BoardView extends VBox {
         for (Card card : player.getHand()) {
             CardView cv = new CardView(card);
 
-            // IMPORTANT: Seules les cartes du joueur actuel sont visibles (faces retournées)
-            // Les cartes des adversaires restent face cachée
+            // On indique à la vue si elle doit forcer l'affichage de la face
+            // même si la carte n'est pas "retournée" au sens du jeu.
             if (isCurrentPlayer) {
-                card.setFlipped(true); // Le joueur voit ses propres cartes
-            } else {
-                card.setFlipped(false); // Les adversaires voient le dos des cartes
+                cv.setForceVisible(true);
             }
+
 
             cv.updateImage();
 

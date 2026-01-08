@@ -29,20 +29,6 @@ public class GameSetupView extends StackPane {
                 CornerRadii.EMPTY,
                 Insets.EMPTY
         )));
-//        try {
-//            Image bgImg = new Image(getClass().getResourceAsStream("/images/franck.jpg"));
-//            BackgroundImage background = new BackgroundImage(
-//                    bgImg,
-//                    BackgroundRepeat.NO_REPEAT,
-//                    BackgroundRepeat.NO_REPEAT,
-//                    BackgroundPosition.CENTER,
-//                    new BackgroundSize(BackgroundSize.AUTO, BackgroundSize.AUTO, false, false, true, true)
-//            );
-//            setBackground(new Background(background));
-//        } catch (Exception e) {
-//            setBackground(new Background(new BackgroundFill(
-//                    Color.rgb(20, 25, 35), CornerRadii.EMPTY, Insets.EMPTY)));
-//        }
 
         Region overlay = new Region();
         overlay.setStyle("-fx-background-color: rgba(0, 0, 0, 0.7);");

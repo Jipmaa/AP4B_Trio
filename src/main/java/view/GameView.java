@@ -306,9 +306,8 @@ public class GameView extends BorderPane {
 
         alert.setContentText(content.toString());
 
-        ButtonType replayBtn = new ButtonType("Rejouer");
         ButtonType menuBtn = new ButtonType("Menu");
-        alert.getButtonTypes().setAll(replayBtn, menuBtn);
+        alert.getButtonTypes().setAll(menuBtn);
 
         Optional<ButtonType> result = alert.showAndWait();
         if (result.isPresent()) {

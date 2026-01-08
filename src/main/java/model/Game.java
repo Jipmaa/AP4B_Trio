@@ -107,49 +107,41 @@ public class Game {
      * Tentative de retourner une carte
      */
     public boolean attemptFlipCard(Card card) {
-        // Vérifier si la carte est déjà révélée dans le tour actuel
+        // 1. Vérifier si la carte est déjà révélée ce tour-ci
         if (revealedCards.contains(card)) {
-            System.out.println("Erreur numéro 1");
             return false;
         }
 
-        // Vérifier si la carte appartient au plateau
+        // 2. Si la carte est sur le plateau central
         if (board.getCenterCards().contains(card)) {
-
-            System.out.println("Erreur numéro 3");
             return flipBoardCard(card);
         }
 
-        System.out.println("Erreur numéro 2");
+        // 3. Si la carte appartient à un joueur
+        for (Player p : players) {
+            if (p.getHand().contains(card)) {
+                // Appeler la méthode spécifique aux joueurs (qui vérifie les extrémités)
+                return flipPlayerCard(card, p);
+            }
+        }
+
         return false;
     }
 
     private boolean flipBoardCard(Card card) {
-        // Les cartes du plateau sont retournées
-        revealedCards.add(card);
         card.setFlipped(true);
-
-        if (revealedCards.size() == 2) {
-            return checkPairMatch();
-        }
-
+        revealedCards.add(card);
         return true;
     }
 
     private boolean flipPlayerCard(Card card, Player owner) {
-
         if (!owner.canFlipCard(card)) {
             return false;
         }
 
         card.setFlipped(true);
-
         revealedCards.add(card);
         owner.markCardRevealed(card);
-
-        if (revealedCards.size() == 2) {
-            return checkPairMatch();
-        }
 
         return true;
     }
@@ -199,14 +191,12 @@ public class Game {
 
         if (mode == Mode.TEAM) {
             Team t = findTeamOfPlayer(p);
-            if (t != null) {
-                t.addPoint(pts);
-            }
+            if (t != null) t.addPoint(pts);
         } else {
             p.addPoint(pts);
         }
 
-        // Retirer les cartes du jeu
+        // Retirer les cartes...
         for (Card card : revealedCards) {
             board.removeCard(card);
             for (Player player : players) {
@@ -216,7 +206,7 @@ public class Game {
 
         revealedCards.clear();
 
-        // Vérifier si la partie est terminée
+        // ICI : On vérifie si ce point était le point de la victoire
         checkGameOver();
     }
 
@@ -270,10 +260,26 @@ public class Game {
     }
 
     public void nextPlayer() {
-        // Réinitialiser les cartes révélées de tous les joueurs pour le nouveau tour
+        // 1. Remettre toutes les cartes actuellement révélées face cachée
+        for (Card card : revealedCards) {
+            card.setFlipped(false);
+        }
+
+        // 2. Vider la liste des cartes révélées du plateau pour le nouveau tour
+        revealedCards.clear();
+
+        // 3. Réinitialiser les cartes révélées de chaque joueur (logique interne)
         for (Player player : players) {
+            // IMPORTANT : Si des cartes de la main étaient retournées, on les cache aussi
+            for (Card card : player.getHand()) {
+                // On ne cache que si elle n'est pas censée être vue (ex: fin du tour)
+                // La visibilité de la main du joueur local est gérée par forceVisible dans la vue
+                card.setFlipped(false);
+            }
             player.resetRevealedThisTurn();
         }
+
+        // 4. Changer de joueur
         currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
     }
 
@@ -281,13 +287,29 @@ public class Game {
      * Vérifie si la partie est terminée (plus de trios possibles)
      */
     private void checkGameOver() {
-        // Compter le nombre total de cartes restantes
+        // 1. Vérification par le score (Victoire par 3 trios)
+        if (mode == Mode.TEAM) {
+            for (Team t : teams) {
+                if (t.getScore() >= 3) {
+                    gameOver = true;
+                    return;
+                }
+            }
+        } else {
+            for (Player p : players) {
+                if (p.getScore() >= 3) {
+                    gameOver = true;
+                    return;
+                }
+            }
+        }
+
+        // 2. Vérification par épuisement des cartes (votre code actuel)
         int totalCards = board.size();
         for (Player player : players) {
             totalCards += player.getHand().size();
         }
 
-        // Si moins de 3 cartes, la partie est terminée
         if (totalCards < 3) {
             gameOver = true;
         }
