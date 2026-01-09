@@ -150,19 +150,20 @@ public class PicanteRoulette extends Stage {
         String imgPath = null;
 
         switch(letter) {
-            case "A": text = "JACKPOT !!! Vous gagnez 2 points !\nExcellent semestre."; imgPath = "/images/letter-A.png"; break;
-            case "B": text = "Vous gagnez 1 point !\nVous avez l'autorisation de partir en FISE INFORMATIQUE."; imgPath = "/images/letter-B.png"; break;
-            case "C": text = "Vous gagnez 1 point !\nVous n'avez pas l'autorisation de déposer une demande d'études à l'étranger. Efforts à poursuivre."; imgPath = "/images/letter-C.png"; break;
-            case "D": text = "Vous gagnez 1 point !\nAttention aux seuils de crédits. Le TC5 n'est pas un droit acquis d'avance"; imgPath = "/images/letter-D.png"; break;
-            case "E": text = "Vous ne gagnez rien !\nTrès mauvais semestre. Prenez vos précautions en vue d'une réorientation"; imgPath = "/images/letter-E.png"; break;
-            case "F": text = "Vous perdez 1 point !\nConvoqué devant le 2ème jury de suivi"; imgPath = "/images/letter-F.png"; break;
+            case "A": text = "JACKPOT !!! Vous gagnez 2 points ! Excellent semestre."; imgPath = "/images/letter-A.png"; break;
+            case "B": text = "Vous gagnez 1 point ! Vous avez l'autorisation de partir en FISE INFORMATIQUE."; imgPath = "/images/letter-B.png"; break;
+            case "C": text = "Vous gagnez 1 point ! Vous n'avez pas l'autorisation de déposer une demande d'études à l'étranger. Efforts à poursuivre."; imgPath = "/images/letter-C.png"; break;
+            case "D": text = "Vous gagnez 1 point ! Attention aux seuils de crédits. Le TC5 n'est pas un droit acquis d'avance."; imgPath = "/images/letter-D.png"; break;
+            case "E": text = "Vous ne gagnez rien ! Très mauvais semestre. Prenez vos précautions en vue d'une réorientation."; imgPath = "/images/letter-E.png"; break;
+            case "F": text = "Vous perdez 1 point ! Convoqué devant le 2ème jury de suivi."; imgPath = "/images/letter-F.png"; break;
 
             default: text = "Error"; break;
         }
 
         resultLabel.setText(text);
-        resultLabel.setWrapText(true);
-        resultLabel.setMaxWidth(600);
+        resultLabel.setWrapText(true); // Active le retour à la ligne
+        resultLabel.setMaxWidth(1200);  // Largeur maximale pour le retour à la ligne
+        resultLabel.setPrefWidth(1200); // Largeur préférée pour éviter que le label soit trop petit
         try {
             rewardImage.setImage(new Image(getClass().getResourceAsStream(imgPath)));
         } catch (Exception e) {}
