@@ -235,7 +235,7 @@ public class Game {
             onPicanteTrio.run();
             return; // La suite sera gérée dans applyPicanteReward
         }
-        
+
         // En mode PICANTE solo, déclencher la roulette
         if (mode == Mode.PICANTE && onPicanteTrio != null) {
             onPicanteTrio.run();
@@ -248,25 +248,37 @@ public class Game {
             Team t = findTeamOfPlayer(p);
             if (t != null) t.addPoint(pts);
 
-            // Déclencher l'échange de cartes
-            if (onTeamCardExchange != null) {
+            // Retirer les cartes...
+            for (Card card : revealedCards) {
+                board.removeCard(card);
+                for (Player player : players) {
+                    player.removeCardFromHand(card);
+                }
+            }
+
+            revealedCards.clear();
+
+            checkGameOver();
+
+            // Déclencher l'échange de cartes SEULEMENT si la partie n'est pas terminée
+            if (!gameOver && onTeamCardExchange != null) {
                 onTeamCardExchange.run();
             }
         } else {
             p.addPoint(pts);
-        }
 
-        // Retirer les cartes...
-        for (Card card : revealedCards) {
-            board.removeCard(card);
-            for (Player player : players) {
-                player.removeCardFromHand(card);
+            // Retirer les cartes...
+            for (Card card : revealedCards) {
+                board.removeCard(card);
+                for (Player player : players) {
+                    player.removeCardFromHand(card);
+                }
             }
+
+            revealedCards.clear();
+
+            checkGameOver();
         }
-
-        revealedCards.clear();
-
-        checkGameOver();
     }
 
     public void applyPicanteReward(String letter) {
@@ -286,7 +298,7 @@ public class Game {
         if (mode == Mode.TEAM) {
             Team t = findTeamOfPlayer(p);
             if (t != null) t.addPoint(pts);
-            
+
             // Retirer les cartes
             for (Card card : revealedCards) {
                 board.removeCard(card);
@@ -294,20 +306,21 @@ public class Game {
                     player.removeCardFromHand(card);
                 }
             }
-            
+
             revealedCards.clear();
-            
+
             checkGameOver();
 
             // Déclencher l'échange de cartes APRÈS la roulette
             // L'équipe gagnante ne peut PAS échanger
-            if (onTeamCardExchange != null) {
+            // ET seulement si la partie n'est pas terminée
+            if (!gameOver && onTeamCardExchange != null) {
                 onTeamCardExchange.run();
             }
 
         } else {
             p.addPoint(pts);
-            
+
             // Retirer les cartes
             for (Card card : revealedCards) {
                 board.removeCard(card);
@@ -377,7 +390,7 @@ public class Game {
     public Player getTeammate(Player player) {
         Team team = findTeamOfPlayer(player);
         if (team == null) return null;
-        
+
         for (Player p : team.getPlayers()) {
             if (!p.equals(player)) {
                 return p;
@@ -393,11 +406,11 @@ public class Game {
         // Retirer les cartes des mains
         player1.removeCardFromHand(card1);
         player2.removeCardFromHand(card2);
-        
+
         // Ajouter les cartes aux nouvelles mains
         player1.addCardToHand(card2);
         player2.addCardToHand(card1);
-        
+
         // Retrier les mains
         player1.sortHand();
         player2.sortHand();

@@ -1,10 +1,6 @@
 package view;
 
 import controller.NavigationController;
-import javafx.geometry.Pos;
-import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 public class MenuView {
@@ -17,20 +13,8 @@ public class MenuView {
     }
 
     public void show() {
-        VBox root = new VBox(20);
-        root.setAlignment(Pos.CENTER);
-
-        Button newGameButton = new Button("Nouvelle partie");
-        newGameButton.setOnAction(e -> navController.showGameSetup());
-
-        Button quitButton = new Button("Quitter");
-        quitButton.setOnAction(e -> stage.close());
-
-        root.getChildren().addAll(newGameButton, quitButton);
-
-        Scene scene = new Scene(root, 300, 200);
-        stage.setScene(scene);
-        stage.setTitle("Menu Principal");
+        // Afficher directement la configuration de jeu en plein écran
+        stage.setMaximized(true);
         navController.showGameSetup();
     }
 }

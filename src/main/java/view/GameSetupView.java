@@ -51,7 +51,7 @@ public class GameSetupView extends StackPane {
         picanteCheckBox = new CheckBox("Mode Picante");
         picanteCheckBox.setFont(Font.font("Arial", FontWeight.BOLD, 16));
         picanteCheckBox.setTextFill(Color.web("#FF6B6B"));
-        
+
         // Texte d'aide pour le mode Picante
         Label picanteHelp = new Label("(Gambling après chaque trio)");
         picanteHelp.setFont(Font.font("Arial", FontWeight.NORMAL, 12));
@@ -104,14 +104,19 @@ public class GameSetupView extends StackPane {
         // Boutons
         Button startButton = createStyledButton("COMMENCER", "#4CAF50");
         startButton.setOnAction(e -> startGame(navController));
-        Button backButton = createStyledButton("RETOUR", "#757575");
-        backButton.setOnAction(e -> navController.showMainMenu());
+        Button quitButton = createStyledButton("QUITTER", "#757575");
+        quitButton.setOnAction(e -> {
+            // Fermer l'application
+            javafx.application.Platform.exit();
+        });
 
-        HBox buttonBox = new HBox(20, backButton, startButton);
+        HBox buttonBox = new HBox(20, quitButton, startButton);
         buttonBox.setAlignment(Pos.CENTER);
 
         configPanel.getChildren().addAll(title, modeBox, picanteCheckBox, picanteHelp, playerCountBox, playerNamesBox, teamNamesBox, buttonBox);
         getChildren().addAll(overlay, configPanel);
+
+
     }
 
     private void updatePlayerNameFields(int count) {
@@ -169,7 +174,7 @@ public class GameSetupView extends StackPane {
     private void startGame(NavigationController navController) {
         Mode mode = ((RadioButton) modeGroup.getSelectedToggle()).getText().equals("Équipes") ? Mode.TEAM : Mode.NORMAL;
         boolean picanteEnabled = picanteCheckBox.isSelected();
-        
+
         // En mode solo, si Picante est activé, on change le mode
         if (picanteEnabled && mode == Mode.NORMAL) {
             mode = Mode.PICANTE;

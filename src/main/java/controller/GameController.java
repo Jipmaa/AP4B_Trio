@@ -17,6 +17,8 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
+
+
 public class GameController {
 
     private Game game;
@@ -31,18 +33,19 @@ public class GameController {
         this.navController = navController;
 
         this.onLetterSelected = letter -> {
-            System.out.println("Lettre reçue : " + letter);
             game.applyPicanteReward(letter);
-            notifyGameStateChanged();
         };
 
         game.setOnPicanteTrio(() -> {
             Platform.runLater(() -> {
                 PicanteRoulette dialog = new PicanteRoulette(primaryStage, onLetterSelected);
-                dialog.showAndWait();
+                dialog.showAndWait(); // Bloquant : attend la fermeture
+
+                // La roulette est maintenant fermée, on peut notifier
+                notifyGameStateChanged();
             });
         });
-        
+
         // Nouveau callback pour l'échange de cartes en mode TEAM
         game.setOnTeamCardExchange(() -> {
             Platform.runLater(() -> {
@@ -64,7 +67,7 @@ public class GameController {
             onGameStateChanged.run();
         }
     }
-    
+
     /**
      * Propose l'échange initial au début du jeu (mode TEAM uniquement)
      */
@@ -72,7 +75,7 @@ public class GameController {
         if (game.getMode() != Game.Mode.TEAM) {
             return;
         }
-        
+
         Platform.runLater(() -> {
             Alert confirmDialog = new Alert(Alert.AlertType.CONFIRMATION);
             confirmDialog.setTitle("Échange initial");
@@ -81,11 +84,11 @@ public class GameController {
                 "Les équipes souhaitent-elles échanger des cartes avant de commencer ?\n\n" +
                 "(Chaque équipe peut échanger une carte entre coéquipiers)"
             );
-            
+
             ButtonType yesButton = new ButtonType("Oui");
             ButtonType noButton = new ButtonType("Non");
             confirmDialog.getButtonTypes().setAll(yesButton, noButton);
-            
+
             confirmDialog.showAndWait().ifPresent(response -> {
                 if (response == yesButton) {
                     handleInitialTeamExchange();
@@ -93,17 +96,17 @@ public class GameController {
             });
         });
     }
-    
+
     /**
      * Gérer l'échange initial entre toutes les équipes au début du jeu
      */
     private void handleInitialTeamExchange() {
         isProcessing = true;
-        
+
         // Tous les joueurs peuvent échanger au début
         List<Player> eligiblePlayers = new ArrayList<>(game.getPlayers());
         Map<Player, Card> playerChoices = new HashMap<>();
-        
+
         // Traiter les joueurs séquentiellement
         processPlayerExchangeSequentially(eligiblePlayers, 0, playerChoices);
     }
@@ -183,11 +186,11 @@ public class GameController {
      */
     private void handleTeamCardExchange() {
         isProcessing = true;
-        
+
         // Identifier l'équipe du joueur actuel (celle qui a gagné le trio)
         Player currentPlayer = game.getCurrentPlayer();
         model.Team winningTeam = findTeamOfPlayer(currentPlayer);
-        
+
         // Liste des joueurs pouvant échanger (tous sauf l'équipe gagnante)
         List<Player> eligiblePlayers = new ArrayList<>();
         for (Player player : game.getPlayers()) {
@@ -197,20 +200,20 @@ public class GameController {
                 eligiblePlayers.add(player);
             }
         }
-        
+
         if (eligiblePlayers.isEmpty()) {
             isProcessing = false;
             notifyGameStateChanged();
             return;
         }
-        
+
         // Map pour stocker les choix de chaque joueur
         Map<Player, Card> playerChoices = new HashMap<>();
-        
+
         // Traiter les joueurs séquentiellement (un par un)
         processPlayerExchangeSequentially(eligiblePlayers, 0, playerChoices);
     }
-    
+
     /**
      * Traite l'échange pour chaque joueur de manière séquentielle
      */
@@ -220,16 +223,16 @@ public class GameController {
             performExchanges(playerChoices);
             return;
         }
-        
+
         Player player = eligiblePlayers.get(index);
         Player teammate = game.getTeammate(player);
-        
+
         if (teammate == null || teammate.getHand().isEmpty()) {
             // Passer au joueur suivant
             processPlayerExchangeSequentially(eligiblePlayers, index + 1, playerChoices);
             return;
         }
-        
+
         Platform.runLater(() -> {
             // Créer un dialogue avec option de refuser
             Alert confirmDialog = new Alert(Alert.AlertType.CONFIRMATION);
@@ -239,22 +242,22 @@ public class GameController {
                 player.getName() + ", voulez-vous échanger une carte avec " + teammate.getName() + " ?\n\n" +
                 "(L'échange est facultatif)"
             );
-            
+
             ButtonType yesButton = new ButtonType("Oui, échanger");
             ButtonType noButton = new ButtonType("Non, passer");
             confirmDialog.getButtonTypes().setAll(yesButton, noButton);
-            
+
             confirmDialog.showAndWait().ifPresent(response -> {
                 if (response == yesButton) {
                     // Le joueur veut échanger
                     CardExchangeDialog dialog = new CardExchangeDialog(
-                        primaryStage, 
-                        player, 
+                        primaryStage,
+                        player,
                         player.getName() + ", choisissez une carte à échanger avec " + teammate.getName()
                     );
-                    
+
                     dialog.show();
-                    
+
                     dialog.getSelectedCard().thenAccept(selectedCard -> {
                         playerChoices.put(player, selectedCard);
                         // Passer au joueur suivant
@@ -269,7 +272,7 @@ public class GameController {
             });
         });
     }
-    
+
     /**
      * Effectue les échanges entre coéquipiers ayant choisi d'échanger
      */
@@ -277,24 +280,24 @@ public class GameController {
         Platform.runLater(() -> {
             List<Player> processedPlayers = new ArrayList<>();
             List<String> exchangeMessages = new ArrayList<>();
-            
+
             for (Player player : playerChoices.keySet()) {
                 if (processedPlayers.contains(player)) continue;
-                
+
                 Player teammate = game.getTeammate(player);
                 if (teammate == null) continue;
-                
+
                 Card card1 = playerChoices.get(player);
                 Card card2 = playerChoices.get(teammate);
-                
+
                 // Vérifier que les DEUX coéquipiers ont choisi d'échanger
                 if (card1 != null && card2 != null) {
                     game.exchangeCards(player, card1, teammate, card2);
                     processedPlayers.add(player);
                     processedPlayers.add(teammate);
-                    
+
                     exchangeMessages.add("✓ " + player.getName() + " ↔ " + teammate.getName());
-                    
+
                     System.out.println("Échange effectué entre " + player.getName() + " et " + teammate.getName());
                 } else if (card1 == null && card2 == null) {
                     exchangeMessages.add("✗ " + player.getName() + " et " + teammate.getName() + " ont refusé");
@@ -304,20 +307,20 @@ public class GameController {
                     exchangeMessages.add("✗ " + refuser + " a refusé l'échange");
                 }
             }
-            
+
             isProcessing = false;
             notifyGameStateChanged();
-            
+
             if (!exchangeMessages.isEmpty()) {
                 showAlert(
-                    "Échanges terminés", 
-                    "Résumé des échanges :\n\n" + String.join("\n", exchangeMessages), 
+                    "Échanges terminés",
+                    "Résumé des échanges :\n\n" + String.join("\n", exchangeMessages),
                     Alert.AlertType.INFORMATION
                 );
             }
         });
     }
-    
+
     /**
      * Trouve l'équipe d'un joueur
      */

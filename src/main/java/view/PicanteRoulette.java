@@ -41,36 +41,43 @@ public class PicanteRoulette extends Stage {
 
         Label title = new Label("TOURNEZ LA ROULETTE !\n");
         title.setTextFill(Color.GOLD);
-        title.setFont(Font.font("Arial", FontWeight.BOLD, 24));
+        title.setFont(Font.font("Arial", FontWeight.BOLD, 32));
 
-        // Création de la flèche
+        // Création de la flèche (plus grande)
         Polygon arrow = new Polygon();
         arrow.getPoints().addAll(
                 0.0, 0.0,   // Point supérieur gauche
-                20.0, 0.0, // Point supérieur droit
-                10.0, 30.0 // Point inférieur (centre)
+                30.0, 0.0, // Point supérieur droit
+                15.0, 45.0 // Point inférieur (centre)
         );
         arrow.setFill(Color.GOLD);
 
         // Ajout du titre et de la flèche au conteneur
         titleContainer.getChildren().addAll(title, arrow);
 
-        // Cercle représentant la roulette
+        // Cercle représentant la roulette (plus grande)
         ImageView wheel = new ImageView(new Image(getClass().getResourceAsStream("/images/roulette.png")));
-        wheel.setFitWidth(500);
-        wheel.setFitHeight(500);
+        wheel.setFitWidth(600);
+        wheel.setFitHeight(600);
         wheel.setPreserveRatio(true);
 
         resultLabel = new Label("?");
         resultLabel.setTextFill(Color.WHITE);
-        resultLabel.setFont(Font.font("Arial", 18));
+        resultLabel.setFont(Font.font("Arial", 24));
 
         rewardImage = new ImageView();
-        rewardImage.setFitHeight(100);
+        rewardImage.setFitHeight(150);
         rewardImage.setPreserveRatio(true);
 
         Button spinBtn = new Button("LANCER !");
+        spinBtn.setFont(Font.font("Arial", FontWeight.BOLD, 18));
+        spinBtn.setPrefSize(200, 60);
+        spinBtn.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-background-radius: 10; -fx-cursor: hand;");
+
         closeBtn = new Button("RETOURNER AU JEU");
+        closeBtn.setFont(Font.font("Arial", FontWeight.BOLD, 18));
+        closeBtn.setPrefSize(250, 60);
+        closeBtn.setStyle("-fx-background-color: #FF6B6B; -fx-text-fill: white; -fx-background-radius: 10; -fx-cursor: hand;");
         closeBtn.setDisable(true);
 
         spinBtn.setOnAction(e -> {
@@ -82,7 +89,11 @@ public class PicanteRoulette extends Stage {
 
         // Ajout du conteneur de titre et des autres éléments au layout principal
         layout.getChildren().addAll(titleContainer, wheel, spinBtn, resultLabel, rewardImage, closeBtn);
-        setScene(new Scene(layout, 400, 500));
+
+        // Créer une scène qui s'adapte à la taille de l'écran et maximiser
+        Scene scene = new Scene(layout);
+        setScene(scene);
+        setMaximized(true);
     }
 
 
@@ -139,17 +150,19 @@ public class PicanteRoulette extends Stage {
         String imgPath = null;
 
         switch(letter) {
-            case "A": text = "JACKPOT !!! Vous gagnez 1 point bonus !\nExcellent semestre."; imgPath = "/images/letter-A.png"; break;
-            case "B": text = "Vous gagnez... un incroyable rien !\nVous avez l'autorisation de partir en FISE INFORMATIQUE."; imgPath = "/images/letter-B.png"; break;
-            case "C": text = "Vous gagnez... un incroyable rien !\nVous n'avez pas l'autorisation de déposer une demande d'études à l'étranger. Efforts à poursuivre."; imgPath = "/images/letter-C.png"; break;
-            case "D": text = "Vous gagnez... un incroyable rien !\nAttention aux seuils de crédits. Le TC5 n'est pas un droit acquis d'avance"; imgPath = "/images/letter-D.png"; break;
-            case "E": text = "Vous gagnez... -1 point ?!\nTrès mauvais semestre. Prenez vos précautions en vue d'une réorientation"; imgPath = "/images/letter-E.png"; break;
-            case "F": text = "Vous gagnez... -2 points ?!\nConvoqué devant le 2ème jury de suivi"; imgPath = "/images/letter-F.png"; break;
+            case "A": text = "JACKPOT !!! Vous gagnez 2 points !\nExcellent semestre."; imgPath = "/images/letter-A.png"; break;
+            case "B": text = "Vous gagnez 1 point !\nVous avez l'autorisation de partir en FISE INFORMATIQUE."; imgPath = "/images/letter-B.png"; break;
+            case "C": text = "Vous gagnez 1 point !\nVous n'avez pas l'autorisation de déposer une demande d'études à l'étranger. Efforts à poursuivre."; imgPath = "/images/letter-C.png"; break;
+            case "D": text = "Vous gagnez 1 point !\nAttention aux seuils de crédits. Le TC5 n'est pas un droit acquis d'avance"; imgPath = "/images/letter-D.png"; break;
+            case "E": text = "Vous ne gagnez rien !\nTrès mauvais semestre. Prenez vos précautions en vue d'une réorientation"; imgPath = "/images/letter-E.png"; break;
+            case "F": text = "Vous perdez 1 point !\nConvoqué devant le 2ème jury de suivi"; imgPath = "/images/letter-F.png"; break;
 
             default: text = "Error"; break;
         }
 
         resultLabel.setText(text);
+        resultLabel.setWrapText(true);
+        resultLabel.setMaxWidth(600);
         try {
             rewardImage.setImage(new Image(getClass().getResourceAsStream(imgPath)));
         } catch (Exception e) {}
