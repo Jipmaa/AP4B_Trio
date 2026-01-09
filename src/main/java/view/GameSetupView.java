@@ -44,11 +44,19 @@ public class GameSetupView extends StackPane {
         modeGroup = new ToggleGroup();
         RadioButton normalMode = createRadioButton("Solo", modeGroup, true);
         RadioButton teamMode = createRadioButton("Équipes", modeGroup, false);
+        normalMode.setStyle("-fx-font-family: 'Arial'; -fx-font-size: 14px; -fx-font-weight: bold;");
+        teamMode.setStyle("-fx-font-family: 'Arial'; -fx-font-size: 14px; -fx-font-weight: bold;");
         modeBox.getChildren().addAll(normalMode, teamMode);
 
         picanteCheckBox = new CheckBox("Mode Picante");
         picanteCheckBox.setFont(Font.font("Arial", FontWeight.BOLD, 16));
         picanteCheckBox.setTextFill(Color.web("#FF6B6B"));
+        
+        // Texte d'aide pour le mode Picante
+        Label picanteHelp = new Label("(Gambling après chaque trio)");
+        picanteHelp.setFont(Font.font("Arial", FontWeight.NORMAL, 12));
+        picanteHelp.setTextFill(Color.web("#B0B0B0"));
+        picanteHelp.setWrapText(true);
 
         // Nombre de Joueurs
         VBox playerCountBox = createSection("Nombre de Joueurs");
@@ -102,7 +110,7 @@ public class GameSetupView extends StackPane {
         HBox buttonBox = new HBox(20, backButton, startButton);
         buttonBox.setAlignment(Pos.CENTER);
 
-        configPanel.getChildren().addAll(title, modeBox, picanteCheckBox, playerCountBox, playerNamesBox, teamNamesBox, buttonBox);
+        configPanel.getChildren().addAll(title, modeBox, picanteCheckBox, picanteHelp, playerCountBox, playerNamesBox, teamNamesBox, buttonBox);
         getChildren().addAll(overlay, configPanel);
     }
 
@@ -117,7 +125,7 @@ public class GameSetupView extends StackPane {
             playerNameFields[i] = new TextField("Joueur " + (i + 1));
             playerNameFields[i].setFont(Font.font("Arial", 14));
 
-            String style = "-fx-background-radius: 5; -fx-padding: 8; -fx-background-color: #f4f4f4;";
+            String style = "-fx-background-radius: 5; -fx-padding: 8; -fx-background-color: #f4f4f4;-fx-font-family: 'Arial'; -fx-font-size: 14px;";
 
             if (isTeamMode) {
                 // Utilisation du modulo pour alterner les couleurs (A, B, A, B...)
@@ -160,7 +168,12 @@ public class GameSetupView extends StackPane {
 
     private void startGame(NavigationController navController) {
         Mode mode = ((RadioButton) modeGroup.getSelectedToggle()).getText().equals("Équipes") ? Mode.TEAM : Mode.NORMAL;
-        if (picanteCheckBox.isSelected() && mode == Mode.NORMAL) mode = Mode.PICANTE;
+        boolean picanteEnabled = picanteCheckBox.isSelected();
+        
+        // En mode solo, si Picante est activé, on change le mode
+        if (picanteEnabled && mode == Mode.NORMAL) {
+            mode = Mode.PICANTE;
+        }
 
         int playerCount = playerSpinner.getValue();
         String[] playerNames = new String[playerCount];
@@ -176,7 +189,7 @@ public class GameSetupView extends StackPane {
             }
         }
 
-        navController.startGame(mode, playerCount, playerNames, teamNamesArray);
+        navController.startGame(mode, playerCount, playerNames, teamNamesArray, picanteEnabled);
     }
 
     // Méthodes utilitaires (createSection, createRadioButton, createStyledButton) identiques à votre code original...

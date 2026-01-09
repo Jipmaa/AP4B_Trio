@@ -242,9 +242,13 @@ public class GameView extends BorderPane {
 
     private String getModeText() {
         String base = game.getMode() == Game.Mode.TEAM ? "MODE ÉQUIPES" : "MODE SOLO";
+        
         if (game.getMode() == Game.Mode.PICANTE) {
             base = "MODE SOLO 🌶️ PICANTE";
+        } else if (game.getMode() == Game.Mode.TEAM && game.isPicanteEnabled()) {
+            base = "MODE ÉQUIPES 🌶️ PICANTE";
         }
+        
         return base;
     }
 

@@ -29,11 +29,16 @@ public class NavigationController {
         stage.getScene().setRoot(gameSetupView);
     }
 
-    public void startGame(Mode mode, int playerCount, String[] playerNames, String[][] teamNames) {
+    public void startGame(Mode mode, int playerCount, String[] playerNames, String[][] teamNames, boolean picanteEnabled) {
         Deck deck = new Deck("resources/cards.txt");
         Board board = new Board(new ArrayList<>()); // Board vide au départ
 
         Game game = new Game(deck, mode, board);
+        
+        // Activer le mode Picante si demandé (fonctionne en mode TEAM ou NORMAL)
+        if (picanteEnabled) {
+            game.setPicanteEnabled(true);
+        }
 
         List<Player> players = new ArrayList<>();
         for (int i = 0; i < playerCount; i++) {
@@ -74,5 +79,10 @@ public class NavigationController {
         gameController.setPrimaryStage(primaryStage);
         GameView gameView = new GameView(game, gameController);
         stage.getScene().setRoot(gameView);
+        
+        // Proposer l'échange initial si mode TEAM
+        if (mode == Mode.TEAM) {
+            gameController.offerInitialExchange();
+        }
     }
 }

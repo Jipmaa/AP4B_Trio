@@ -17,15 +17,21 @@ public class Game {
     private final List<Player> players = new ArrayList<>();
     private final List<Team> teams = new ArrayList<>();
     private String lastPicanteLetter;
+    private boolean picanteEnabled = false; // Nouveau : Active la roulette en mode TEAM
 
 
     private int currentPlayerIndex = 0;
     private final List<Card> revealedCards = new ArrayList<>();
     private boolean gameOver = false;
     private Runnable onPicanteTrio;
+    private Runnable onTeamCardExchange; // Nouveau callback pour l'échange de cartes
 
     public void setOnPicanteTrio(Runnable callback) {
         this.onPicanteTrio = callback;
+    }
+
+    public void setOnTeamCardExchange(Runnable callback) {
+        this.onTeamCardExchange = callback;
     }
 
     public void setLastPicanteLetter(String letter) {
@@ -34,6 +40,14 @@ public class Game {
 
     public String getLastPicanteLetter() {
         return lastPicanteLetter;
+    }
+
+    public void setPicanteEnabled(boolean enabled) {
+        this.picanteEnabled = enabled;
+    }
+
+    public boolean isPicanteEnabled() {
+        return picanteEnabled;
     }
 
 
@@ -216,8 +230,16 @@ public class Game {
     public void rewardTrio() {
         Player p = getCurrentPlayer();
 
+        // En mode TEAM avec Picante activé, déclencher la roulette
+        if (mode == Mode.TEAM && picanteEnabled && onPicanteTrio != null) {
+            onPicanteTrio.run();
+            return; // La suite sera gérée dans applyPicanteReward
+        }
+        
+        // En mode PICANTE solo, déclencher la roulette
         if (mode == Mode.PICANTE && onPicanteTrio != null) {
             onPicanteTrio.run();
+            return;
         }
 
         int pts = 1;
@@ -225,6 +247,11 @@ public class Game {
         if (mode == Mode.TEAM) {
             Team t = findTeamOfPlayer(p);
             if (t != null) t.addPoint(pts);
+
+            // Déclencher l'échange de cartes
+            if (onTeamCardExchange != null) {
+                onTeamCardExchange.run();
+            }
         } else {
             p.addPoint(pts);
         }
@@ -246,27 +273,52 @@ public class Game {
         Player p = getCurrentPlayer();
         int pts = 0;
 
-        if ("A".equals(letter)) pts += 1;
-        if ("E".equals(letter)) pts -= 1;
-        if ("F".equals(letter)) pts -= 2;
+        // Attribution des points selon la lettre
+        switch(letter) {
+            case "A": pts = 2; break;
+            case "B": pts = 1; break;
+            case "C": pts = 1; break;
+            case "D": pts = 1; break;
+            case "E": pts = 0; break;
+            case "F": pts = -1; break;
+        }
 
         if (mode == Mode.TEAM) {
             Team t = findTeamOfPlayer(p);
             if (t != null) t.addPoint(pts);
+            
+            // Retirer les cartes
+            for (Card card : revealedCards) {
+                board.removeCard(card);
+                for (Player player : players) {
+                    player.removeCardFromHand(card);
+                }
+            }
+            
+            revealedCards.clear();
+            
+            checkGameOver();
+
+            // Déclencher l'échange de cartes APRÈS la roulette
+            // L'équipe gagnante ne peut PAS échanger
+            if (onTeamCardExchange != null) {
+                onTeamCardExchange.run();
+            }
+
         } else {
             p.addPoint(pts);
-        }
-
-        // Retirer les cartes
-        for (Card card : revealedCards) {
-            board.removeCard(card);
-            for (Player player : players) {
-                player.removeCardFromHand(card);
+            
+            // Retirer les cartes
+            for (Card card : revealedCards) {
+                board.removeCard(card);
+                for (Player player : players) {
+                    player.removeCardFromHand(card);
+                }
             }
-        }
 
-        revealedCards.clear();
-        checkGameOver();
+            revealedCards.clear();
+            checkGameOver();
+        }
     }
 
 
@@ -317,6 +369,38 @@ public class Game {
             if (t.getPlayers().contains(p)) return t;
         }
         return null;
+    }
+
+    /**
+     * Trouve le coéquipier d'un joueur
+     */
+    public Player getTeammate(Player player) {
+        Team team = findTeamOfPlayer(player);
+        if (team == null) return null;
+        
+        for (Player p : team.getPlayers()) {
+            if (!p.equals(player)) {
+                return p;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Échange deux cartes entre deux joueurs
+     */
+    public void exchangeCards(Player player1, Card card1, Player player2, Card card2) {
+        // Retirer les cartes des mains
+        player1.removeCardFromHand(card1);
+        player2.removeCardFromHand(card2);
+        
+        // Ajouter les cartes aux nouvelles mains
+        player1.addCardToHand(card2);
+        player2.addCardToHand(card1);
+        
+        // Retrier les mains
+        player1.sortHand();
+        player2.sortHand();
     }
 
     public void nextPlayer() {
