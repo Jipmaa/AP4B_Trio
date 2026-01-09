@@ -3,6 +3,7 @@ package view;
 import controller.GameController;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
@@ -11,6 +12,7 @@ import javafx.scene.text.FontWeight;
 import model.Card;
 import model.Game;
 import model.Player;
+import model.Team;
 
 public class BoardView extends VBox {
 
@@ -52,6 +54,27 @@ public class BoardView extends VBox {
             getChildren().addAll(playersHandsBox, centerBox);
         } else {
             getChildren().add(playersHandsBox);
+        }
+    }
+
+    // Dans view/BoardView.java
+
+    private void updateExchangeUI(VBox playerBox, Player player) {
+        if (game.getMode() == Game.Mode.TEAM && game.getCurrentPlayer().equals(player)) {
+            Team team = player.getTeam();
+            if (team != null && team.canExchange()) {
+                Button btnExchange = new Button("Échanger une carte");
+                btnExchange.setStyle("-fx-background-color: #FF9800; -fx-text-fill: white; -fx-font-weight: bold;");
+
+                btnExchange.setOnAction(e -> {
+                    // On informe l'utilisateur qu'il doit cliquer sur une de SES cartes
+                    btnExchange.setText("Cliquez sur une de vos cartes...");
+                    btnExchange.setDisable(true);
+                    // On peut ajouter un flag dans le controller pour intercepter le prochain clic
+                    controller.setExchangeMode(true);
+                });
+                playerBox.getChildren().add(btnExchange);
+            }
         }
     }
 

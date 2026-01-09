@@ -16,10 +16,26 @@ public class Game {
     private final Board board;
     private final List<Player> players = new ArrayList<>();
     private final List<Team> teams = new ArrayList<>();
+    private String lastPicanteLetter;
+
 
     private int currentPlayerIndex = 0;
     private final List<Card> revealedCards = new ArrayList<>();
     private boolean gameOver = false;
+    private Runnable onPicanteTrio;
+
+    public void setOnPicanteTrio(Runnable callback) {
+        this.onPicanteTrio = callback;
+    }
+
+    public void setLastPicanteLetter(String letter) {
+        this.lastPicanteLetter = letter;
+    }
+
+    public String getLastPicanteLetter() {
+        return lastPicanteLetter;
+    }
+
 
     public Game(Deck deck, Mode mode, Board board) {
         this.deck = deck;
@@ -175,6 +191,33 @@ public class Game {
         return v1 == v2;
     }
 
+    private boolean isTripleSeven() {
+        if (revealedCards.size() != 3) return false;
+
+        return revealedCards.get(0).getValue() == 7
+                && revealedCards.get(1).getValue() == 7
+                && revealedCards.get(2).getValue() == 7;
+    }
+
+    // Méthode pour effectuer l'échange
+    public void exchangeCard(Player provider, Card card) {
+        Team team = provider.getTeam();
+        if (team == null || !team.canExchange()) return;
+
+        // Trouver le partenaire
+        Player partner = team.getPlayers().stream()
+                .filter(p -> !p.equals(provider))
+                .findFirst().orElse(null);
+
+        if (partner != null) {
+            provider.removeCardFromHand(card);
+            partner.addCardToHand(card);
+            provider.sortHand(); // Important : Trio exige que les mains soient triées
+            partner.sortHand();
+            team.setCanExchange(false); // Consomme le droit d'échange
+        }
+    }
+
     /**
      * Vérifie si les 3 cartes révélées forment un trio
      */
@@ -202,7 +245,24 @@ public class Game {
      */
     public void rewardTrio() {
         Player p = getCurrentPlayer();
-        int pts = (mode == Mode.PICANTE ? 2 : 1);
+
+        if (mode == Mode.PICANTE && onPicanteTrio != null) {
+            onPicanteTrio.run();
+        }
+
+        String picanteLetter = lastPicanteLetter;
+        System.out.println("La lettre récupérée est : " + picanteLetter);
+        int pts = 1;
+
+        if ("A".equals(picanteLetter)) {
+            pts += 1;
+        }
+        if ("E".equals(picanteLetter)) {
+            pts -= 1;
+        }
+        if ("F".equals(picanteLetter)) {
+            pts -= 2;
+        }
 
         if (mode == Mode.TEAM) {
             Team t = findTeamOfPlayer(p);
@@ -222,10 +282,15 @@ public class Game {
         revealedCards.clear();
 
         // ICI : On vérifie si ce point était le point de la victoire
-        checkGameOver();
         if (this.mode == Mode.TEAM) {
             for (Team t : teams) {
                 t.setExchangeRight(true);
+            }
+        }
+
+        if (this.mode == Mode.TEAM) {
+            for (Team t : teams) {
+                t.setCanExchange(true);
             }
         }
         checkGameOver();
@@ -325,7 +390,12 @@ public class Game {
             }
         }
 
-        // 2. Vérification par épuisement des cartes (votre code actuel)
+        if(isTripleSeven()){
+            gameOver = true;
+            return;
+        }
+
+        // 2. Vérification par épuisement des cartes
         int totalCards = board.size();
         for (Player player : players) {
             totalCards += player.getHand().size();

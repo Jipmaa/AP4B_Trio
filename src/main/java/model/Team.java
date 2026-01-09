@@ -9,6 +9,17 @@ public class Team {
     private final List<Player> members = new ArrayList<>();
     private int score;
 
+    // Dans model/Team.java
+    private boolean canExchange = true; // Par défaut, le droit est présent au début
+
+    public boolean canExchange() {
+        return canExchange;
+    }
+
+    public void setCanExchange(boolean canExchange) {
+        this.canExchange = canExchange;
+    }
+
     public Team(String name) {
         this.name = name;
         this.score = 0;
@@ -39,8 +50,6 @@ public class Team {
                 .findFirst()
                 .orElse(null);
     }
-
-    private boolean canExchange = true; // Nouveau flag pour la règle d'échange
 
     public boolean hasExchangeRight() {
         return canExchange;

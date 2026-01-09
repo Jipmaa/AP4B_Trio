@@ -1,20 +1,30 @@
 package controller;
 
+import javafx.stage.Stage;
 import model.Card;
 import model.Game;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
+import view.PicanteRoulette;
 
 public class GameController {
 
     private Game game;
     private NavigationController navController;
     private Runnable onGameStateChanged;
+    private Stage primaryStage;
     private boolean isProcessing = false; // Bloquer les clics pendant les animations
 
     public GameController(Game game, NavigationController navController) {
         this.game = game;
         this.navController = navController;
+        game.setOnPicanteTrio(() -> {
+            // Il faut exécuter cela sur le thread JavaFX
+            javafx.application.Platform.runLater(() -> {
+                PicanteRoulette dialog = new PicanteRoulette(primaryStage);
+                dialog.showAndWait();
+            });
+        });
     }
 
     public void setOnGameStateChanged(Runnable callback) {
@@ -30,8 +40,22 @@ public class GameController {
     /**
      * Gérer le clic sur une carte
      */
+    private boolean exchangeMode = false;
+
+    public void setExchangeMode(boolean active) {
+        this.exchangeMode = active;
+    }
+
     public void handleCardClick(Card card) {
-        if (isProcessing) {
+        if (isProcessing) return;
+
+        // SI ON EST EN TRAIN D'ÉCHANGER
+        if (exchangeMode) {
+            if (card.getOwner() != null && card.getOwner().equals(game.getCurrentPlayer())) {
+                game.exchangeCard(game.getCurrentPlayer(), card);
+                exchangeMode = false;
+                notifyGameStateChanged(); // Rafraîchit l'affichage
+            }
             return;
         }
 
