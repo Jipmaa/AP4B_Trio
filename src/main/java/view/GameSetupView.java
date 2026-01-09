@@ -111,18 +111,19 @@ public class GameSetupView extends StackPane {
         playerNameFields = new TextField[count];
 
         boolean isTeamMode = ((RadioButton) modeGroup.getSelectedToggle()).getText().equals("Équipes");
+        int numTeams = (count == 6) ? 3 : 2; // Détermine le nombre d'équipes
 
         for (int i = 0; i < count; i++) {
             playerNameFields[i] = new TextField("Joueur " + (i + 1));
             playerNameFields[i].setFont(Font.font("Arial", 14));
 
-            // Style de base
             String style = "-fx-background-radius: 5; -fx-padding: 8; -fx-background-color: #f4f4f4;";
 
             if (isTeamMode) {
-                // Joueur 1&2 -> Couleur 1, Joueur 3&4 -> Couleur 2, etc.
-                String teamColor = TEAM_COLORS[i / 2];
-                style += "-fx-border-color: " + teamColor + "; -fx-border-width: 2; -fx-border-radius: 5;";
+                // Utilisation du modulo pour alterner les couleurs (A, B, A, B...)
+                // Cela correspondra parfaitement à la logique d'opposition dans le controller
+                String teamColor = TEAM_COLORS[i % numTeams];
+                style += "-fx-border-color: " + teamColor + "; -fx-border-width: 3; -fx-border-radius: 5;";
             } else {
                 style += "-fx-border-color: #757575; -fx-border-width: 1; -fx-border-radius: 5;";
             }

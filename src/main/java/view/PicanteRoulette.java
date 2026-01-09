@@ -9,20 +9,24 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Polygon;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import java.util.Random;
+import java.util.function.Consumer;
 
 public class PicanteRoulette extends Stage {
     private final String[] options = {"A", "B", "C", "D", "E", "F"};
     private Label resultLabel;
     private ImageView rewardImage;
     private Button closeBtn;
+    private Consumer<String> onLetterSelected;
 
-    public PicanteRoulette(Stage owner) {
+    public PicanteRoulette(Stage owner, Consumer<String> onLetterSelected) {
+        this.onLetterSelected = onLetterSelected;
         initOwner(owner);
         initModality(Modality.APPLICATION_MODAL);
         setTitle("🌶️ MODE PICANTE - ROULETTE 🌶️");
@@ -31,9 +35,25 @@ public class PicanteRoulette extends Stage {
         layout.setAlignment(Pos.CENTER);
         layout.setStyle("-fx-background-color: #2c3e50; -fx-padding: 30;");
 
-        Label title = new Label("TOURNEZ LA ROULETTE !");
+        // Conteneur pour le titre et la flèche
+        VBox titleContainer = new VBox(10);
+        titleContainer.setAlignment(Pos.CENTER);
+
+        Label title = new Label("TOURNEZ LA ROULETTE !\n");
         title.setTextFill(Color.GOLD);
         title.setFont(Font.font("Arial", FontWeight.BOLD, 24));
+
+        // Création de la flèche
+        Polygon arrow = new Polygon();
+        arrow.getPoints().addAll(
+                0.0, 0.0,   // Point supérieur gauche
+                20.0, 0.0, // Point supérieur droit
+                10.0, 30.0 // Point inférieur (centre)
+        );
+        arrow.setFill(Color.GOLD);
+
+        // Ajout du titre et de la flèche au conteneur
+        titleContainer.getChildren().addAll(title, arrow);
 
         // Cercle représentant la roulette
         ImageView wheel = new ImageView(new Image(getClass().getResourceAsStream("/images/roulette.png")));
@@ -60,9 +80,11 @@ public class PicanteRoulette extends Stage {
 
         closeBtn.setOnAction(e -> this.close());
 
-        layout.getChildren().addAll(title, wheel, spinBtn, resultLabel, rewardImage, closeBtn);
+        // Ajout du conteneur de titre et des autres éléments au layout principal
+        layout.getChildren().addAll(titleContainer, wheel, spinBtn, resultLabel, rewardImage, closeBtn);
         setScene(new Scene(layout, 400, 500));
     }
+
 
     private void animateWheel(ImageView wheel) {
         RotateTransition rt = new RotateTransition(Duration.seconds(2), wheel);
@@ -107,6 +129,11 @@ public class PicanteRoulette extends Stage {
 
     private void showReward(String letter) {
         resultLabel.setText("Résultat : " + letter);
+
+        if (onLetterSelected != null) {
+            onLetterSelected.accept(letter);
+        }
+
         // Exemple de logique de gain
         String text;
         String imgPath = null;
@@ -117,7 +144,7 @@ public class PicanteRoulette extends Stage {
             case "C": text = "Vous gagnez... un incroyable rien !\nVous n'avez pas l'autorisation de déposer une demande d'études à l'étranger. Efforts à poursuivre."; imgPath = "/images/letter-C.png"; break;
             case "D": text = "Vous gagnez... un incroyable rien !\nAttention aux seuils de crédits. Le TC5 n'est pas un droit acquis d'avance"; imgPath = "/images/letter-D.png"; break;
             case "E": text = "Vous gagnez... -1 point ?!\nTrès mauvais semestre. Prenez vos précautions en vue d'une réorientation"; imgPath = "/images/letter-E.png"; break;
-            case "F": text = "Vous gagnez... -2 points ?!\nConvoqué devant le 2ème jury de suivi"; imgPath = "/images/letter-E.png"; break;
+            case "F": text = "Vous gagnez... -2 points ?!\nConvoqué devant le 2ème jury de suivi"; imgPath = "/images/letter-F.png"; break;
 
             default: text = "Error"; break;
         }

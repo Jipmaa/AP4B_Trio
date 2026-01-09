@@ -13,6 +13,7 @@ import java.util.List;
 public class NavigationController {
 
     private Stage stage;
+    private Stage primaryStage;
 
     public NavigationController(Stage stage) {
         this.stage = stage;
@@ -56,8 +57,10 @@ public class NavigationController {
             // Répartition des joueurs dans les équipes :
             // Joueur 0 et 1 -> Équipe 0, Joueur 2 et 3 -> Équipe 1, etc.
             for (int i = 0; i < players.size(); i++) {
-                int teamIndex = i / 2;
-                // Sécurité pour ne pas dépasser le nombre d'équipes créées
+                // Si 4 joueurs : i=0 (T0), i=1 (T1), i=2 (T0), i=3 (T1)
+                // Si 6 joueurs : i=0 (T0), i=1 (T1), i=2 (T2), i=3 (T0), i=4 (T1), i=5 (T2)
+                int teamIndex = i % numTeams;
+
                 if (teamIndex < game.getTeams().size()) {
                     game.getTeams().get(teamIndex).addPlayer(players.get(i));
                 }
@@ -68,6 +71,7 @@ public class NavigationController {
         game.distributeCards();
 
         GameController gameController = new GameController(game, this);
+        gameController.setPrimaryStage(primaryStage);
         GameView gameView = new GameView(game, gameController);
         stage.getScene().setRoot(gameView);
     }

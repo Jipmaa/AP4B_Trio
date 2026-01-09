@@ -9,17 +9,6 @@ public class Team {
     private final List<Player> members = new ArrayList<>();
     private int score;
 
-    // Dans model/Team.java
-    private boolean canExchange = true; // Par défaut, le droit est présent au début
-
-    public boolean canExchange() {
-        return canExchange;
-    }
-
-    public void setCanExchange(boolean canExchange) {
-        this.canExchange = canExchange;
-    }
-
     public Team(String name) {
         this.name = name;
         this.score = 0;
@@ -41,22 +30,6 @@ public class Team {
         if (p.getTeam() == this) {
             p.setTeam(null);
         }
-    }
-
-    // Dans Team.java
-    public Player getPartner(Player currentPlayer) {
-        return members.stream()
-                .filter(p -> !p.equals(currentPlayer))
-                .findFirst()
-                .orElse(null);
-    }
-
-    public boolean hasExchangeRight() {
-        return canExchange;
-    }
-
-    public void setExchangeRight(boolean available) {
-        this.canExchange = available;
     }
 
     public List<Player> getPlayers() {

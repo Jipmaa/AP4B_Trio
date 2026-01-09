@@ -123,19 +123,6 @@ public class Game {
      * Tentative de retourner une carte
      */
 
-    public void performExchange(Player from, Player to, Card card) {
-        Team team = findTeamOfPlayer(from);
-        if (team != null && team.hasExchangeRight()) {
-            from.removeCardFromHand(card);
-            to.addCardToHand(card);
-
-            from.sortHand();
-            to.sortHand();
-
-            team.setExchangeRight(false); // Utilise le droit
-        }
-    }
-
 
     public boolean attemptFlipCard(Card card) {
         // 1. Vérifier si la carte est déjà révélée ce tour-ci
@@ -199,24 +186,7 @@ public class Game {
                 && revealedCards.get(2).getValue() == 7;
     }
 
-    // Méthode pour effectuer l'échange
-    public void exchangeCard(Player provider, Card card) {
-        Team team = provider.getTeam();
-        if (team == null || !team.canExchange()) return;
 
-        // Trouver le partenaire
-        Player partner = team.getPlayers().stream()
-                .filter(p -> !p.equals(provider))
-                .findFirst().orElse(null);
-
-        if (partner != null) {
-            provider.removeCardFromHand(card);
-            partner.addCardToHand(card);
-            provider.sortHand(); // Important : Trio exige que les mains soient triées
-            partner.sortHand();
-            team.setCanExchange(false); // Consomme le droit d'échange
-        }
-    }
 
     /**
      * Vérifie si les 3 cartes révélées forment un trio
@@ -250,19 +220,7 @@ public class Game {
             onPicanteTrio.run();
         }
 
-        String picanteLetter = lastPicanteLetter;
-        System.out.println("La lettre récupérée est : " + picanteLetter);
         int pts = 1;
-
-        if ("A".equals(picanteLetter)) {
-            pts += 1;
-        }
-        if ("E".equals(picanteLetter)) {
-            pts -= 1;
-        }
-        if ("F".equals(picanteLetter)) {
-            pts -= 2;
-        }
 
         if (mode == Mode.TEAM) {
             Team t = findTeamOfPlayer(p);
@@ -281,20 +239,36 @@ public class Game {
 
         revealedCards.clear();
 
-        // ICI : On vérifie si ce point était le point de la victoire
-        if (this.mode == Mode.TEAM) {
-            for (Team t : teams) {
-                t.setExchangeRight(true);
+        checkGameOver();
+    }
+
+    public void applyPicanteReward(String letter) {
+        Player p = getCurrentPlayer();
+        int pts = 0;
+
+        if ("A".equals(letter)) pts += 1;
+        if ("E".equals(letter)) pts -= 1;
+        if ("F".equals(letter)) pts -= 2;
+
+        if (mode == Mode.TEAM) {
+            Team t = findTeamOfPlayer(p);
+            if (t != null) t.addPoint(pts);
+        } else {
+            p.addPoint(pts);
+        }
+
+        // Retirer les cartes
+        for (Card card : revealedCards) {
+            board.removeCard(card);
+            for (Player player : players) {
+                player.removeCardFromHand(card);
             }
         }
 
-        if (this.mode == Mode.TEAM) {
-            for (Team t : teams) {
-                t.setCanExchange(true);
-            }
-        }
+        revealedCards.clear();
         checkGameOver();
     }
+
 
     /**
      * Échec du trio - retourner les cartes

@@ -59,25 +59,6 @@ public class BoardView extends VBox {
 
     // Dans view/BoardView.java
 
-    private void updateExchangeUI(VBox playerBox, Player player) {
-        if (game.getMode() == Game.Mode.TEAM && game.getCurrentPlayer().equals(player)) {
-            Team team = player.getTeam();
-            if (team != null && team.canExchange()) {
-                Button btnExchange = new Button("Échanger une carte");
-                btnExchange.setStyle("-fx-background-color: #FF9800; -fx-text-fill: white; -fx-font-weight: bold;");
-
-                btnExchange.setOnAction(e -> {
-                    // On informe l'utilisateur qu'il doit cliquer sur une de SES cartes
-                    btnExchange.setText("Cliquez sur une de vos cartes...");
-                    btnExchange.setDisable(true);
-                    // On peut ajouter un flag dans le controller pour intercepter le prochain clic
-                    controller.setExchangeMode(true);
-                });
-                playerBox.getChildren().add(btnExchange);
-            }
-        }
-    }
-
     public void refresh() {
         playersHandsBox.getChildren().clear();
         centerGrid.getChildren().clear();

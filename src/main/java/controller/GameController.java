@@ -7,6 +7,8 @@ import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import view.PicanteRoulette;
 
+import java.util.function.Consumer;
+
 public class GameController {
 
     private Game game;
@@ -14,14 +16,21 @@ public class GameController {
     private Runnable onGameStateChanged;
     private Stage primaryStage;
     private boolean isProcessing = false; // Bloquer les clics pendant les animations
+    private Consumer<String> onLetterSelected;
 
     public GameController(Game game, NavigationController navController) {
         this.game = game;
         this.navController = navController;
+
+        this.onLetterSelected = letter -> {
+            System.out.println("Lettre reçue : " + letter);
+            game.applyPicanteReward(letter);
+            notifyGameStateChanged();
+        };
+
         game.setOnPicanteTrio(() -> {
-            // Il faut exécuter cela sur le thread JavaFX
             javafx.application.Platform.runLater(() -> {
-                PicanteRoulette dialog = new PicanteRoulette(primaryStage);
+                PicanteRoulette dialog = new PicanteRoulette(primaryStage, onLetterSelected);
                 dialog.showAndWait();
             });
         });
@@ -29,6 +38,10 @@ public class GameController {
 
     public void setOnGameStateChanged(Runnable callback) {
         this.onGameStateChanged = callback;
+    }
+
+    public void setPrimaryStage(Stage stage) {
+        this.primaryStage = stage;
     }
 
     private void notifyGameStateChanged() {
@@ -40,24 +53,11 @@ public class GameController {
     /**
      * Gérer le clic sur une carte
      */
-    private boolean exchangeMode = false;
 
-    public void setExchangeMode(boolean active) {
-        this.exchangeMode = active;
-    }
 
     public void handleCardClick(Card card) {
         if (isProcessing) return;
 
-        // SI ON EST EN TRAIN D'ÉCHANGER
-        if (exchangeMode) {
-            if (card.getOwner() != null && card.getOwner().equals(game.getCurrentPlayer())) {
-                game.exchangeCard(game.getCurrentPlayer(), card);
-                exchangeMode = false;
-                notifyGameStateChanged(); // Rafraîchit l'affichage
-            }
-            return;
-        }
 
         boolean success = game.attemptFlipCard(card);
 
